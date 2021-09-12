@@ -11,9 +11,14 @@ __metaclass__ = type
 DOCUMENTATION = r"""
 ---
 module: checks
-short_description: Create, delete, update, pause checks
+short_description: Create, delete, update, and pause checks
 description:
-  - Create, delete, update, pause checks
+  - Creates a new check and returns its ping URL.
+  - For C(state=absent), will delete the check with the given C(uuid).
+  - For C(state=pause), will pause the check with the given C(uuid).
+  - All request parameters are optional and will use their default values if omitted.
+  - To create a Simple check, specify the C(timeout) parameter.
+  - To create a Cron check, specify the C(schedule) and C(tz) parameters.
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
