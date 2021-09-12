@@ -13,7 +13,9 @@ DOCUMENTATION = r"""
 module: checks_flips_info
 short_description: Get a list of check flips
 description:
-  - Get a list of check flips
+  - Get a list of check's status changes.
+  - Returns a list of "flips" this check has experienced.
+  - A flip is a change of status (from "down" to "up," or from "up" to "down").
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
