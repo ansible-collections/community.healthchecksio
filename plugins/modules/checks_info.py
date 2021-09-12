@@ -13,7 +13,7 @@ DOCUMENTATION = r"""
 module: checks_info
 short_description: Get a list of checks
 description:
-  - Get a list of checks
+  - Returns a list of checks belonging to the user, optionally filtered by one or more tags.
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
