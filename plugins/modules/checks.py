@@ -132,29 +132,29 @@ data:
   description: Create, update, pause or delete response
   returned: always
   type: dict
-    sample:
-      channels: ''
-      desc: ''
-      grace: 3600
-      last_ping: null
-      manual_resume: false
-      methods: ''
-      n_pings: 0
-      name: test
-      next_ping: null
-      pause_url: https://healthchecks.io/api/v1/checks/524d0f69-0ff3-4120-a2e2-03ebd5736b25/pause
-      ping_url: https://hc-ping.com/524d0f69-0ff3-4120-a2e2-03ebd5736b25
-      schedule: '* * * * *'
-      slug: test
-      status: new
-      tags: ''
-      tz: UTC
-      update_url: https://healthchecks.io/api/v1/checks/524d0f69-0ff3-4120-a2e2-03ebd5736b25
+  sample:
+    channels: ''
+    desc: ''
+    grace: 3600
+    last_ping: null
+    manual_resume: false
+    methods: ''
+    n_pings: 0
+    name: test
+    next_ping: null
+    pause_url: https://healthchecks.io/api/v1/checks/524d0f69-0ff3-4120-a2e2-03ebd5736b25/pause
+    ping_url: https://hc-ping.com/524d0f69-0ff3-4120-a2e2-03ebd5736b25
+    schedule: '* * * * *'
+    slug: test
+    status: new
+    tags: ''
+    tz: UTC
+    update_url: https://healthchecks.io/api/v1/checks/524d0f69-0ff3-4120-a2e2-03ebd5736b25
 msg:
   description: Create, update, pause or delete message
   returned: always
   type: str
-    sample: New check 524d0f69-0ff3-4120-a2e2-03ebd5736b25 created
+  sample: New check 524d0f69-0ff3-4120-a2e2-03ebd5736b25 created
 """
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
