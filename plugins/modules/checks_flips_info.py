@@ -35,9 +35,19 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
+- name: Get a list of checks flips
+  community.healthchecksio.checks_flips_info:
+    state: present
+    uuid: cae50618-c97f-483e-9814-0277dc523d1
 """
 
 RETURN = r"""
+data:
+  description: List of check flips
+  returned: always
+  type: dict
+  sample:
+    flips: []
 """
 
 
