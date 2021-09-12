@@ -175,11 +175,11 @@ jobs:
 
       - name: Configure integration test run secrets
         env:
-          api_key: ${{ secrets.HEALTHCHECKSIO_API_TOKEN }}
+          HEALTHCHECKSIO_API_TOKEN: ${{ secrets.HEALTHCHECKSIO_API_TOKEN }}
         run: |
           ./tests/utils/render.sh \
-          tests/integration/integration_config.yml.template \
-          > tests/integration/integration_config.yml
+            ./tests/integration/integration_config.yml.template \
+              > ./tests/integration/integration_config.yml
 
       # Run the integration tests
       - name: Run integration test
