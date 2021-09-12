@@ -1,5 +1,8 @@
 # Healthchecks.io Community Collection
 
+[![CI](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml)
+[![black](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml)
+
 This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service.
 
 ## Code of Conduct
