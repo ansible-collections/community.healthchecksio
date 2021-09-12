@@ -13,7 +13,7 @@ DOCUMENTATION = r"""
 module: badges_info
 short_description: Get the project badges
 description:
-  - Get the project badges
+  - Returns a map of all tags in the project, with badge URLs for each tag.
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
