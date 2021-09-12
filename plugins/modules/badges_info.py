@@ -28,9 +28,33 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
+- name: Get the project badges
+  community.healthchecksio.badges_info:
+    state: present
+    api_token: "{{ lookup('ansible.builtin.env', 'HEALTHCHECKSIO_API_TOKEN') }}"
 """
 
 RETURN = r"""
+data:
+  description: Project badges
+  returned: always
+  type: dict
+  sample:
+    badges:
+      '*':
+        json: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/_JD3lXcF-2.json
+        json3: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/_JD3lXcF.json
+        shields: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/_JD3lXcF-2.shields
+        shields3: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/_JD3lXcF.shields
+        svg: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/_JD3lXcF-2.svg
+        svg3: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/_JD3lXcF.svg
+      test:
+        json: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/e823bLfZ-2/test.json
+        json3: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/e823bLfZ/test.json
+        shields: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/e823bLfZ-2/test.shields
+        shields3: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/e823bLfZ/test.shields
+        svg: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/e823bLfZ-2/test.svg
+        svg3: https://healthchecks.io/badge/5dc9afdd-f4da-4b74-bb83-84430f/e823bLfZ/test.svg
 """
 
 
