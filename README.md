@@ -113,6 +113,17 @@ N/A
 ```
 
 ```yaml
+- name: Create a check named "test hourly"
+  community.healthchecksio.checks:
+    state: present
+    name: "test hourly"
+    unique: ["name"]
+    tags: ["test", "hourly"]
+    desc: "my hourly test check"
+    schedule: "0 * * * *"
+```
+
+```yaml
 - name: Returns all of the checks
   community.healthchecksio.checks_info:
     state: present
