@@ -22,14 +22,6 @@ description:
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
-  # api_token:
-  #   aliases: ["api_key"]
-  #   description:
-  #     - Healthchecks.io API token.
-  #     - There are several environment variables which can be used to provide this value:
-  #     - C(HEALTHCHECKSIO_API_TOKEN), C(HEALTHCHECKSIO_API_KEY), C(HC_API_TOKEN), C(HC_API_KEY)
-  #   type: str
-  #   required: true
   state:
     description:
       - C(present) will create or update a check.
