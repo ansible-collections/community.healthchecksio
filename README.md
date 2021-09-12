@@ -1,11 +1,6 @@
-# collection_template
-You can build a new repository for an Ansible Collection using this template by following [Creating a repository from a template](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template). This README.md contains recommended headings for your collection README.md, with comments describing what each section should contain. Once you have created your collection repository, delete this paragraph and the title above it from your README.md.
+# Healthchecks.io Community Collection
 
-# Foo Collection for Ansible
-<!-- Add CI and code coverage badges here. Samples included below. -->
-[![CI](https://github.com/ansible-collections/REPONAMEHERE/workflows/CI/badge.svg?event=push)](https://github.com/ansible-collections/REPONAMEHERE/actions) [![Codecov](https://img.shields.io/codecov/c/github/ansible-collections/REPONAMEHERE)](https://codecov.io/gh/ansible-collections/REPONAMEHERE)
-
-<!-- Describe the collection and why a user would want to use it. What does the collection do? -->
+This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service.
 
 ## Code of Conduct
 
@@ -63,44 +58,114 @@ Every voice is important. If you have something on your mind, create an issue or
 
 <!-- List the versions of Ansible the collection has been tested with. Must match what is in galaxy.yml. -->
 
+Tested with the current Ansible 2.9 and 2.10 releases and the current development version of Ansible.
+Ansible versions before 2.9.10 are not supported.
+
 ## External requirements
 
 <!-- List any external resources the collection depends on, for example minimum versions of an OS, libraries, or utilities. Do not list other Ansible collections here. -->
 
+An account (and API token) for [Healthchecks.io](https://healthchecks.io/).
+
 ### Supported connections
 <!-- Optional. If your collection supports only specific connection types (such as HTTPAPI, netconf, or others), list them here. -->
+
+N/A
 
 ## Included content
 
 <!-- Galaxy will eventually list the module docs within the UI, but until that is ready, you may need to either describe your plugins etc here, or point to an external docsite to cover that information. -->
 
+### Modules
+
+* `community.healthchecksio.badges_info` - Returns a map of all tags in the project, with badge URLs for each tag.
+* `community.healthchecksio.channels_info` - Returns a list of integrations belonging to the project.
+* `community.healthchecksio.checks_flips_info` - Get a list of check's status changes.
+* `community.healthchecksio.checks_info` - Returns a list of checks belonging to the user, optionally filtered by one or more tags.
+* `community.healthchecksio.checks_pings_info` - Returns a list of pings this check has received.
+* `community.healthchecksio.checks` - Create, delete, update, and pause checks.
+
 ## Using this collection
 
 <!--Include some quick examples that cover the most common use cases for your collection content. It can include the following examples of installation and upgrade (change NAMESPACE.COLLECTION_NAME correspondingly):-->
+
+```yaml
+- name: Get the project badges
+  community.healthchecksio.badges_info:
+    state: present
+```
+
+```yaml
+- name: Get a list of integrations
+  community.healthchecksio.channels_info:
+    state: present
+```
+
+```yaml
+- name: Create a check named "test"
+  community.healthchecksio.checks:
+    state: present
+    name: test
+    unique: ["name"]
+```
+
+```yaml
+- name: Returns all of the checks
+  community.healthchecksio.checks_info:
+    state: present
+```
+
+```yaml
+- name: Pause a check by uuid
+  community.healthchecksio.checks:
+    state: pause
+    uuid: "{{ check_uuid }}"
+```
+
+```yaml
+- name: Delete a check by uuid
+  community.healthchecksio.checks:
+    state: absent
+    uuid: "{{ check_uuid }}"
+```
+
+```yaml
+- name: Get a list of checks pings
+  community.healthchecksio.checks_pings_info:
+    state: pings
+    uuid: "{{ check_uuid }}"
+```
+
+```yaml
+- name: Get a list of checks flips
+  community.healthchecksio.checks_flips_info:
+    state: flips
+    uuid: "{{ check_uuid }}"
+```
 
 ### Installing the Collection from Ansible Galaxy
 
 Before using this collection, you need to install it with the Ansible Galaxy command-line tool:
 ```bash
-ansible-galaxy collection install NAMESPACE.COLLECTION_NAME
+ansible-galaxy collection install community.healthchecksio
 ```
 
 You can also include it in a `requirements.yml` file and install it with `ansible-galaxy collection install -r requirements.yml`, using the format:
 ```yaml
 ---
 collections:
-  - name: NAMESPACE.COLLECTION_NAME
+  - name: community.healthchecksio
 ```
 
 Note that if you install the collection from Ansible Galaxy, it will not be upgraded automatically when you upgrade the `ansible` package. To upgrade the collection to the latest available version, run the following command:
 ```bash
-ansible-galaxy collection install NAMESPACE.COLLECTION_NAME --upgrade
+ansible-galaxy collection install community.healthchecksio --upgrade
 ```
 
 You can also install a specific version of the collection, for example, if you need to downgrade when something is broken in the latest version (please report an issue in this repository). Use the following syntax to install version `0.1.0`:
 
 ```bash
-ansible-galaxy collection install NAMESPACE.COLLECTION_NAME:==0.1.0
+ansible-galaxy collection install community.healthchecksio:==0.1.0
 ```
 
 See [Ansible Using collections](https://docs.ansible.com/ansible/devel/user_guide/collections_using.html) for more details.
@@ -112,6 +177,7 @@ See the [changelog](https://github.com/ansible-collections/REPONAMEHERE/tree/mai
 ## Roadmap
 
 <!-- Optional. Include the roadmap for this collection, and the proposed release/versioning strategy so users can anticipate the upgrade/update cycle. -->
+N/A
 
 ## More information
 
