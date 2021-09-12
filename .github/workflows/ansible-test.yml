@@ -133,6 +133,7 @@ jobs:
     name: I (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         ansible:
           # - stable-2.9 # Only if your collection supports Ansible 2.9
