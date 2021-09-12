@@ -125,6 +125,15 @@ EXAMPLES = r"""
     state: present
     name: test
     unique: ["name"]
+
+- name: Create a check named "test hourly"
+  community.healthchecksio.checks:
+    state: present
+    name: "test hourly"
+    unique: ["name"]
+    tags: ["test", "hourly"]
+    desc: "my hourly test check"
+    schedule: "0 * * * *"
 """
 
 RETURN = r"""
