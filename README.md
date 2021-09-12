@@ -3,7 +3,8 @@
 [![CI](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml)
 [![black](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml)
 
-This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service.
+This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service. To learn more about this service, please read [https://healthchecks.io/about/](https://healthchecks.io/about/).
+The service documentation is located at [https://healthchecks.io/docs/](https://healthchecks.io/docs/) and the API documentation is located at [https://healthchecks.io/docs/api/](https://healthchecks.io/docs/api/). This Ansible modules strives for API parity.
 
 ## Code of Conduct
 
@@ -81,6 +82,8 @@ N/A
 
 ### Modules
 
+#### Management API
+
 * `community.healthchecksio.badges_info` - Returns a map of all tags in the project, with badge URLs for each tag.
 * `community.healthchecksio.channels_info` - Returns a list of integrations belonging to the project.
 * `community.healthchecksio.checks_flips_info` - Get a list of check's status changes.
@@ -88,26 +91,35 @@ N/A
 * `community.healthchecksio.checks_pings_info` - Returns a list of pings this check has received.
 * `community.healthchecksio.checks` - Create, delete, update, and pause checks.
 
+#### Ping API
+
+* `community.healthchecksio.ping` - Signal success, fail, and start events.
+
 ## Using this collection
 
 <!--Include some quick examples that cover the most common use cases for your collection content. It can include the following examples of installation and upgrade (change NAMESPACE.COLLECTION_NAME correspondingly):-->
+
+### Management API
 
 ```yaml
 - name: Get the project badges
   community.healthchecksio.badges_info:
     state: present
+    api_key: "{{ api_key }}"
 ```
 
 ```yaml
 - name: Get a list of integrations
   community.healthchecksio.channels_info:
     state: present
+    api_key: "{{ api_key }}"
 ```
 
 ```yaml
 - name: Create a check named "test"
   community.healthchecksio.checks:
     state: present
+    api_key: "{{ api_key }}"
     name: test
     unique: ["name"]
 ```
@@ -116,6 +128,7 @@ N/A
 - name: Create a check named "test hourly"
   community.healthchecksio.checks:
     state: present
+    api_key: "{{ api_key }}"
     name: "test hourly"
     unique: ["name"]
     tags: ["test", "hourly"]
@@ -127,12 +140,14 @@ N/A
 - name: Returns all of the checks
   community.healthchecksio.checks_info:
     state: present
+    api_key: "{{ api_key }}"
 ```
 
 ```yaml
 - name: Pause a check by uuid
   community.healthchecksio.checks:
     state: pause
+    api_key: "{{ api_key }}"
     uuid: "{{ check_uuid }}"
 ```
 
@@ -140,6 +155,7 @@ N/A
 - name: Delete a check by uuid
   community.healthchecksio.checks:
     state: absent
+    api_key: "{{ api_key }}"
     uuid: "{{ check_uuid }}"
 ```
 
@@ -147,6 +163,7 @@ N/A
 - name: Get a list of checks pings
   community.healthchecksio.checks_pings_info:
     state: pings
+    api_key: "{{ api_key }}"
     uuid: "{{ check_uuid }}"
 ```
 
@@ -154,7 +171,34 @@ N/A
 - name: Get a list of checks flips
   community.healthchecksio.checks_flips_info:
     state: flips
+    api_key: "{{ api_key }}"
     uuid: "{{ check_uuid }}"
+```
+
+### Ping API
+
+```yaml
+- name: Send a success signal
+  community.healthchecksio.ping:
+    state: present
+    uuid: "{{ check_uuid }}"
+    signal: success
+```
+
+```yaml
+- name: Send a fail signal
+  community.healthchecksio.ping:
+    state: present
+    uuid: "{{ check_uuid }}"
+    signal: fail
+```
+
+```yaml
+- name: Send a start signal
+  community.healthchecksio.ping:
+    state: present
+    uuid: "{{ check_uuid }}"
+    signal: start
 ```
 
 ### Installing the Collection from Ansible Galaxy
