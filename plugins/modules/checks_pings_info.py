@@ -13,7 +13,9 @@ DOCUMENTATION = r"""
 module: checks_pings_info
 short_description: Get a list of check pings
 description:
-  - Get a list of check pings
+  - Returns a list of pings this check has received.
+  - This endpoint returns pings in reverse order (most recent first).
+  - The total number of returned pings depends on the account's billing plan (100 for free accounts, 1000 for paid accounts).
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
