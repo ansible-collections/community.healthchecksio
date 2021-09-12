@@ -80,10 +80,7 @@ class ChecksInfo(object):
         if status_code != 200:
             self.module.fail_json(
                 changed=False,
-                msg="Failed to get {0} [HTTP {1}]".format(
-                    endpoint,
-                    status_code,
-                ),
+                msg="Failed to get {0} [HTTP {1}]".format(endpoint, status_code),
             )
 
         self.module.exit_json(changed=False, data=json_data)

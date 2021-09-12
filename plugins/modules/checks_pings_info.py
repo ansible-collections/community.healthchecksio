@@ -106,10 +106,7 @@ def main():
         state=dict(type="str", choices=["present"], default="present"),
         uuid=dict(type="str", required=False),
     )
-    module = AnsibleModule(
-        argument_spec=argument_spec,
-        supports_check_mode=True,
-    )
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     run(module)
 

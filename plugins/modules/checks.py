@@ -234,8 +234,7 @@ class Checks(object):
             self.module.fail_json(
                 changed=False,
                 msg="Failed to create or update delete check [HTTP {0}: {1}]".format(
-                    status_code,
-                    json_data.get("error", "(empty error message)"),
+                    status_code, json_data.get("error", "(empty error message)")
                 ),
             )
 
@@ -252,21 +251,14 @@ class Checks(object):
 
         if status_code == 200:
             self.module.exit_json(
-                changed=True,
-                msg="Check {0} successfully deleted".format(uuid),
+                changed=True, msg="Check {0} successfully deleted".format(uuid)
             )
         elif status_code == 404:
-            self.module.exit_json(
-                changed=False,
-                msg="Check {0} not found".format(uuid),
-            )
+            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed delete check {0} [HTTP {1}]".format(
-                    uuid,
-                    status_code,
-                ),
+                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
     def pause(self):
@@ -280,21 +272,14 @@ class Checks(object):
 
         if status_code == 200:
             self.module.exit_json(
-                changed=True,
-                msg="Check {0} successfully paused".format(uuid),
+                changed=True, msg="Check {0} successfully paused".format(uuid)
             )
         elif status_code == 404:
-            self.module.exit_json(
-                changed=False,
-                msg="Check {0} not found".format(uuid),
-            )
+            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed delete check {0} [HTTP {1}]".format(
-                    uuid,
-                    status_code,
-                ),
+                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
 
@@ -313,9 +298,7 @@ def main():
     argument_spec = HealthchecksioHelper.healthchecksio_argument_spec()
     argument_spec.update(
         state=dict(
-            type="str",
-            choices=["present", "absent", "pause"],
-            default="present",
+            type="str", choices=["present", "absent", "pause"], default="present"
         ),
         name=dict(type="str", required=False, default=""),
         tags=dict(type="list", elements="str", required=False, default=[]),
@@ -333,10 +316,7 @@ def main():
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
-        required_if=[
-            ("state", "absent", ["uuid"]),
-            ("state", "pause", ["uuid"]),
-        ],
+        required_if=[("state", "absent", ["uuid"]), ("state", "pause", ["uuid"])],
     )
 
     run(module)

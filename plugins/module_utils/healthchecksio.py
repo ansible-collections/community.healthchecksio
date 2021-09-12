@@ -45,15 +45,11 @@ class HealthchecksioHelper:
         self.baseurl = "https://healthchecks.io/api/v1"
         self.timeout = module.params.get("timeout", 30)
         self.api_token = module.params.get("api_token")
-        self.headers = {
-            "X-Api-Key": self.api_token
-        }
+        self.headers = {"X-Api-Key": self.api_token}
 
         response = self.get("checks")
         if response.status_code == 401:
-            self.module.fail_json(
-                msg="Failed to login using API token",
-            )
+            self.module.fail_json(msg="Failed to login using API token")
 
     def _url_builder(self, path):
         if path[0] == "/":
@@ -105,11 +101,7 @@ class HealthchecksioHelper:
     @staticmethod
     def healthchecksio_argument_spec():
         return dict(
-            state=dict(
-                type="str",
-                choices=["present", "absent"],
-                default="present",
-            ),
+            state=dict(type="str", choices=["present", "absent"], default="present"),
             api_token=dict(
                 type="str",
                 aliases=["api_key"],

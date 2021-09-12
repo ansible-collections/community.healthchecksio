@@ -93,13 +93,8 @@ def run(module):
 
 def main():
     argument_spec = HealthchecksioHelper.healthchecksio_argument_spec()
-    argument_spec.update(
-        state=dict(type="str", choices=["present"], default="present"),
-    )
-    module = AnsibleModule(
-        argument_spec=argument_spec,
-        supports_check_mode=True,
-    )
+    argument_spec.update(state=dict(type="str", choices=["present"], default="present"))
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     run(module)
 

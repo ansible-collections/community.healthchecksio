@@ -93,17 +93,14 @@ class Ping(object):
 
         if status_code == 200:
             self.module.exit_json(
-                changed=True,
-                msg="Sent {0} signal to {1}".format(signal, endpoint),
+                changed=True, msg="Sent {0} signal to {1}".format(signal, endpoint)
             )
 
         else:
             self.module.fail_json(
                 changed=False,
                 msg="Failed to send {0} signal to {1} [HTTP {2}]".format(
-                    signal,
-                    endpoint,
-                    status_code,
+                    signal, endpoint, status_code
                 ),
             )
 
@@ -120,18 +117,16 @@ def run(module):
 def main():
     argument_spec = HealthchecksioHelper.healthchecksio_argument_spec()
     argument_spec.update(
-        state=dict(
-            type="str",
-            choices=["present"],
-            default="present",
-        ),
+        state=dict(type="str", choices=["present"], default="present"),
         uuid=dict(type="str", required=True),
-        signal=dict(type="str", choices=["success", "fail", "start"], required=False, default="success"),
+        signal=dict(
+            type="str",
+            choices=["success", "fail", "start"],
+            required=False,
+            default="success",
+        ),
     )
-    module = AnsibleModule(
-        argument_spec=argument_spec,
-        supports_check_mode=True,
-    )
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     run(module)
 
