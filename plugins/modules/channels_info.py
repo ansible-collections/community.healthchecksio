@@ -28,9 +28,25 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
+- name: Get a list of integrations
+  community.healthchecksio.channels_info:
+    state: present
+    api_token: "{{ lookup('ansible.builtin.env', 'HEALTHCHECKSIO_API_TOKEN') }}"
 """
 
 RETURN = r"""
+data:
+  description: Project integrations
+  returned: always
+  type: dict
+  sample:
+    channels:
+    - id: 82a60fd3-5ae3-4a9e-9747-00097de67711
+      kind: email
+      name: Email
+    - id: 853de669-6910-4bc1-a4cc-55f774a135fd
+      kind: slack
+      name: ''
 """
 
 
