@@ -1,0 +1,2 @@
+---
+api_key: ${HEALTHCHECKSIO_API_TOKEN}
