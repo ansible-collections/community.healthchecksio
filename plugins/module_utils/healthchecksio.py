@@ -46,8 +46,7 @@ class HealthchecksioHelper:
         self.timeout = module.params.get("timeout", 30)
         self.api_token = module.params.get("api_token")
         self.headers = {
-            "X-Api-Key": self.api_token,
-            # "Content-type": "application/json",
+            "X-Api-Key": self.api_token
         }
 
         response = self.get("checks")
