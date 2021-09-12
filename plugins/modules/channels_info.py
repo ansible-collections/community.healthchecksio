@@ -13,7 +13,7 @@ DOCUMENTATION = r"""
 module: channels_info
 short_description: Get a list of integrations
 description:
-  - Get a list of integrations
+  - Returns a list of integrations belonging to the project.
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
