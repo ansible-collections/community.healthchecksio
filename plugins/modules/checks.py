@@ -183,6 +183,17 @@ class Checks(object):
         self.rest = HealthchecksioHelper(module)
         self.api_token = module.params.pop("api_token")
 
+    def get_uuid(self, json_data):
+        ping_url = json_data.get("ping_url", None)
+        if ping_url is not None:
+            uuid = ping_url.split("/")[3]
+            if len(uuid) > 0:
+                return uuid
+            else:
+                return "(unable to determine uuid)"
+        else:
+            return "(unable to determine uuid)"
+
     def create(self):
         if self.module.check_mode:
             self.module.exit_json(changed=False, data={})
@@ -201,10 +212,8 @@ class Checks(object):
         json_data = response.json
         status_code = response.status_code
 
-        # determine the uuid
-        uuid = json_data.get("ping_url").split("/")[3]
-
         if status_code == 200:
+            uuid = self.get_uuid(json_data)
             self.module.exit_json(
                 changed=True,
                 msg="Existing check {0} found and updated".format(uuid),
@@ -213,6 +222,7 @@ class Checks(object):
             )
 
         elif status_code == 201:
+            uuid = self.get_uuid(json_data)
             self.module.exit_json(
                 changed=True,
                 msg="New check {0} created".format(uuid),
@@ -223,8 +233,9 @@ class Checks(object):
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed to create or update delete check [HTTP {0}]".format(
-                    status_code
+                msg="Failed to create or update delete check [HTTP {0}: {1}]".format(
+                    status_code,
+                    json_data.get("error", "(empty error message)"),
                 ),
             )
 
