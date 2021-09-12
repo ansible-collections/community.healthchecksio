@@ -35,9 +35,26 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
+- name: Get a list of checks pings
+  community.healthchecksio.checks_pings_info:
+    state: present
+    uuid: cae50618-c97f-483e-9814-0277dc523d1e
 """
 
 RETURN = r"""
+data:
+  description: List of check pings
+  returned: always
+  type: dict
+  sample:
+    pings:
+    - date: '2021-09-12T13:00:02.231650+00:00'
+      method: GET
+      n: 2759
+      remote_addr: 58.46.132.66
+      scheme: https
+      type: success
+      ua: curl/7.68.0
 """
 
 
