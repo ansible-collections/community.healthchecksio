@@ -11,10 +11,10 @@ license_file: LICENSE
 tags:
   - healthchecks
   - healthchecks.io
-repository: https://github.com/ansible-collections/community.healthchecksio
+repository: https://github.com/mamercad/community.healthchecksio
 #documentation: https://github.com/ansible-collection-migration/community.REPO_NAME/tree/main/docs
-homepage: https://github.com/ansible-collections/community.healthchecksio
-issues: https://github.com/ansible-collections/community.healthchecksio/issues
+homepage: https://github.com/mamercad/community.healthchecksio
+issues: https://github.com/mamercad/community.healthchecksio/issues
 build_ignore:
 # https://docs.ansible.com/ansible/devel/dev_guide/developing_collections.html#ignoring-files-and-folders
   - .gitignore
