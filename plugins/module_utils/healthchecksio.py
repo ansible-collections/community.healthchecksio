@@ -91,6 +91,17 @@ class HealthchecksioHelper:
     def delete(self, path, data=None):
         return self.send("DELETE", path, data)
 
+    def head(self, path, data=None):
+        resp, info = fetch_url(
+            self.module,
+            "https://hc-ping.com/{0}".format(path),
+            data=data,
+            headers=self.headers,
+            method="HEAD",
+            timeout=self.timeout,
+        )
+        return Response(resp, info)
+
     @staticmethod
     def healthchecksio_argument_spec():
         return dict(
