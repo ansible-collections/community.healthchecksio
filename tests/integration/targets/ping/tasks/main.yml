@@ -1,0 +1,54 @@
+- name: Testing checks
+  block:
+
+    - name: Ensure API key is provided
+      ansible.builtin.fail:
+        msg: api_key needs to be defined in tests/integration/integration_config.yml
+      when:
+        - api_key is not defined
+        - api_key | length == 0
+
+    - name: Send start signal
+      community.healthchecksio.ping:
+        state: present
+        api_key: "{{ api_key }}"
+        uuid: "{{ check_uuid }}"
+        signal: start
+      register: result
+
+    - name: Verify start signal
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.msg is defined
+          - "result.msg == 'Sent start signal to {{ check_uuid }}/start'"
+
+    - name: Send fail signal
+      community.healthchecksio.ping:
+        state: present
+        api_key: "{{ api_key }}"
+        uuid: "{{ check_uuid }}"
+        signal: fail
+      register: result
+
+    - name: Verify fail signal
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.msg is defined
+          - "result.msg == 'Sent fail signal to {{ check_uuid }}/fail'"
+
+    - name: Send success signal
+      community.healthchecksio.ping:
+        state: present
+        api_key: "{{ api_key }}"
+        uuid: "{{ check_uuid }}"
+        signal: success
+      register: result
+
+    - name: Verify success signal
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.msg is defined
+          - "result.msg == 'Sent success signal to {{ check_uuid }}'"
