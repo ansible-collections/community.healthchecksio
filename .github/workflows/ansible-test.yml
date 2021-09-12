@@ -181,6 +181,7 @@ jobs:
           ./tests/utils/render.sh \
             ./tests/integration/integration_config.yml.template \
               > ./tests/integration/integration_config.yml
+        working-directory: ./ansible_collections/${{env.NAMESPACE}}/${{env.COLLECTION_NAME}}
 
       # Run the integration tests
       - name: Run integration test
