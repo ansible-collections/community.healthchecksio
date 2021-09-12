@@ -60,36 +60,9 @@ data:
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
+    BadgesInfo,
 )
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-
-
-class BadgesInfo(object):
-    def __init__(self, module):
-        self.module = module
-        self.rest = HealthchecksioHelper(module)
-
-    def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
-        endpoint = "badges"
-
-        response = self.rest.get(endpoint)
-        json_data = response.json
-        status_code = response.status_code
-
-        if status_code != 200:
-            self.module.fail_json(
-                changed=False,
-                msg="Failed to get {0} [HTTP {1}: {2}]".format(
-                    endpoint,
-                    status_code,
-                    json_data.get("message", "(empty error message)"),
-                ),
-            )
-
-        self.module.exit_json(changed=False, data=json_data)
 
 
 def run(module):

@@ -118,3 +118,286 @@ class HealthchecksioHelper:
                 no_log=True,
             ),
         )
+
+
+class BadgesInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+
+    def get(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        endpoint = "badges"
+
+        response = self.rest.get(endpoint)
+        json_data = response.json
+        status_code = response.status_code
+
+        if status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to get {0} [HTTP {1}: {2}]".format(
+                    endpoint,
+                    status_code,
+                    json_data.get("message", "(empty error message)"),
+                ),
+            )
+
+        self.module.exit_json(changed=False, data=json_data)
+
+
+class ChannelsInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+
+    def get(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        endpoint = "channels"
+
+        response = self.rest.get(endpoint)
+        json_data = response.json
+        status_code = response.status_code
+
+        if status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to get {0} [HTTP {1}: {2}]".format(
+                    endpoint,
+                    status_code,
+                    json_data.get("message", "(empty error message)"),
+                ),
+            )
+
+        self.module.exit_json(changed=False, data=json_data)
+
+
+class ChecksFlipsInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+
+    def get(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        uuid = self.module.params.get("uuid", None)
+        endpoint = "checks/{0}/flips".format(uuid)
+
+        response = self.rest.get(endpoint)
+        json_data = response.json
+        status_code = response.status_code
+
+        if status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to get {0} [HTTP {1}]".format(endpoint, status_code),
+            )
+
+        self.module.exit_json(changed=False, data=json_data)
+
+
+class ChecksInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+
+    def get(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        endpoint = "checks"
+
+        tags = self.module.params.get("tags", None)
+        if tags is not None:
+            tags = ["tag=" + tag for tag in tags]
+            tags = "&".join(tags)
+            if tags:
+                endpoint += "?" + tags
+
+        uuid = self.module.params.get("uuid", None)
+        if uuid is not None:
+            endpoint += "/" + uuid
+
+        response = self.rest.get(endpoint)
+        json_data = response.json
+        status_code = response.status_code
+
+        if status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to get {0} [HTTP {1}]".format(endpoint, status_code),
+            )
+
+        self.module.exit_json(changed=False, data=json_data)
+
+
+class ChecksPingsInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+
+    def get(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        uuid = self.module.params.get("uuid", None)
+        endpoint = "checks/{0}/pings".format(uuid)
+
+        response = self.rest.get(endpoint)
+        json_data = response.json
+        status_code = response.status_code
+
+        if status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to get {0} [HTTP {1}: {2}]".format(
+                    endpoint,
+                    status_code,
+                    json_data.get("message", "(empty error message)"),
+                ),
+            )
+
+        self.module.exit_json(changed=False, data=json_data)
+
+
+class Checks(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+        self.api_token = module.params.pop("api_token")
+
+    def get_uuid(self, json_data):
+        ping_url = json_data.get("ping_url", None)
+        if ping_url is not None:
+            uuid = ping_url.split("/")[3]
+            if len(uuid) > 0:
+                return uuid
+            else:
+                return "(unable to determine uuid)"
+        else:
+            return "(unable to determine uuid)"
+
+    def create(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        endpoint = "checks/"
+
+        request_params = dict(self.module.params)
+
+        # uuid is not used to create or update, pop it
+        del request_params["uuid"]
+
+        tags = self.module.params.get("tags", [])
+        request_params["tags"] = " ".join(tags)
+
+        response = self.rest.post(endpoint, data=request_params)
+        json_data = response.json
+        status_code = response.status_code
+
+        if status_code == 200:
+            uuid = self.get_uuid(json_data)
+            self.module.exit_json(
+                changed=True,
+                msg="Existing check {0} found and updated".format(uuid),
+                data=json_data,
+                uuid=uuid,
+            )
+
+        elif status_code == 201:
+            uuid = self.get_uuid(json_data)
+            self.module.exit_json(
+                changed=True,
+                msg="New check {0} created".format(uuid),
+                data=json_data,
+                uuid=uuid,
+            )
+
+        else:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to create or update delete check [HTTP {0}: {1}]".format(
+                    status_code, json_data.get("error", "(empty error message)")
+                ),
+            )
+
+        self.module.exit_json(changed=True, data=json_data)
+
+    def delete(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        uuid = self.module.params.get("uuid")
+        endpoint = "checks/{0}".format(uuid)
+        response = self.rest.delete(endpoint)
+        status_code = response.status_code
+
+        if status_code == 200:
+            self.module.exit_json(
+                changed=True, msg="Check {0} successfully deleted".format(uuid)
+            )
+        elif status_code == 404:
+            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
+        else:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
+            )
+
+    def pause(self):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        uuid = self.module.params.get("uuid")
+        endpoint = "checks/{0}/pause".format(uuid)
+        response = self.rest.post(endpoint)
+        status_code = response.status_code
+
+        if status_code == 200:
+            self.module.exit_json(
+                changed=True, msg="Check {0} successfully paused".format(uuid)
+            )
+        elif status_code == 404:
+            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
+        else:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
+            )
+
+
+class Ping(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+        self.api_token = module.params.pop("api_token")
+
+    def create(self, uuid, signal):
+        if self.module.check_mode:
+            self.module.exit_json(changed=False, data={})
+
+        if signal == "success":
+            endpoint = "{0}".format(uuid)
+        else:
+            endpoint = "{0}/{1}".format(uuid, signal)
+
+        response = self.rest.head(endpoint)
+        status_code = response.status_code
+
+        if status_code == 200:
+            self.module.exit_json(
+                changed=True, msg="Sent {0} signal to {1}".format(signal, endpoint)
+            )
+
+        else:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to send {0} signal to {1} [HTTP {2}]".format(
+                    signal, endpoint, status_code
+                ),
+            )

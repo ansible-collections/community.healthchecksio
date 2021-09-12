@@ -69,40 +69,9 @@ msg:
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
+    Ping,
 )
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-
-
-class Ping(object):
-    def __init__(self, module):
-        self.module = module
-        self.rest = HealthchecksioHelper(module)
-        self.api_token = module.params.pop("api_token")
-
-    def create(self, uuid, signal):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
-        if signal == "success":
-            endpoint = "{0}".format(uuid)
-        else:
-            endpoint = "{0}/{1}".format(uuid, signal)
-
-        response = self.rest.head(endpoint)
-        status_code = response.status_code
-
-        if status_code == 200:
-            self.module.exit_json(
-                changed=True, msg="Sent {0} signal to {1}".format(signal, endpoint)
-            )
-
-        else:
-            self.module.fail_json(
-                changed=False,
-                msg="Failed to send {0} signal to {1} [HTTP {2}]".format(
-                    signal, endpoint, status_code
-                ),
-            )
 
 
 def run(module):

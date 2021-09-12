@@ -53,33 +53,9 @@ data:
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
+    ChecksFlipsInfo,
 )
 from ansible.module_utils.basic import AnsibleModule, env_fallback
-
-
-class ChecksFlipsInfo(object):
-    def __init__(self, module):
-        self.module = module
-        self.rest = HealthchecksioHelper(module)
-
-    def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
-        uuid = self.module.params.get("uuid", None)
-        endpoint = "checks/{0}/flips".format(uuid)
-
-        response = self.rest.get(endpoint)
-        json_data = response.json
-        status_code = response.status_code
-
-        if status_code != 200:
-            self.module.fail_json(
-                changed=False,
-                msg="Failed to get {0} [HTTP {1}]".format(endpoint, status_code),
-            )
-
-        self.module.exit_json(changed=False, data=json_data)
 
 
 def run(module):
