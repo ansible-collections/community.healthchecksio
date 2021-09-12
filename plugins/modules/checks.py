@@ -155,6 +155,11 @@ msg:
   returned: always
   type: str
   sample: New check 524d0f69-0ff3-4120-a2e2-03ebd5736b25 created
+uuid:
+  description: Check UUID from create or update
+  returned: changed
+  type: str
+  sample: 524d0f69-0ff3-4120-a2e2-03ebd5736b25
 """
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
@@ -195,6 +200,7 @@ class Checks(object):
                 changed=True,
                 msg="Existing check {0} found and updated".format(uuid),
                 data=json_data,
+                uuid=uuid,
             )
 
         elif status_code == 201:
@@ -202,6 +208,7 @@ class Checks(object):
                 changed=True,
                 msg="New check {0} created".format(uuid),
                 data=json_data,
+                uuid=uuid,
             )
 
         else:
