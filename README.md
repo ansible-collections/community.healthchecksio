@@ -237,7 +237,11 @@ See the [changelog](https://github.com/ansible-collections/REPONAMEHERE/tree/mai
 ## Roadmap
 
 <!-- Optional. Include the roadmap for this collection, and the proposed release/versioning strategy so users can anticipate the upgrade/update cycle. -->
-N/A
+
+```yaml
+[ ] Get a release out :)
+[ ] Write some unit tests
+```
 
 ## More information
 
