@@ -1,7 +1,7 @@
 # Healthchecks.io Community Collection
 
-[![CI](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml)
-[![black](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml)
+[![CI](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test.yml)
+[![black](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/black.yml)
 
 This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service. To learn more about this service, please read [https://healthchecks.io/about/](https://healthchecks.io/about/).
 The service documentation is located at [https://healthchecks.io/docs/](https://healthchecks.io/docs/) and the API documentation is located at [https://healthchecks.io/docs/api/](https://healthchecks.io/docs/api/). This Ansible modules strives for API parity.
@@ -96,8 +96,6 @@ N/A
 * `community.healthchecksio.ping` - Signal success, fail, and start events.
 
 ## Using this collection
-
-<!--Include some quick examples that cover the most common use cases for your collection content. It can include the following examples of installation and upgrade (change NAMESPACE.COLLECTION_NAME correspondingly):-->
 
 ### Management API
 
