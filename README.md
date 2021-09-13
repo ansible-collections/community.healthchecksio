@@ -1,7 +1,9 @@
 # Healthchecks.io Community Collection
 
-[![CI](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/ansible-test.yml)
-[![black](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/mamercad/community.healthchecksio/actions/workflows/black.yml)
+[![black](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/black.yml)
+[![integration](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-integration.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-integration.yml)
+[![sanity](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-sanity.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-sanity.yml)
+[![unit](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-unit.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-unit.yml)
 
 This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service. To learn more about this service, please read [https://healthchecks.io/about/](https://healthchecks.io/about/).
 The service documentation is located at [https://healthchecks.io/docs/](https://healthchecks.io/docs/) and the API documentation is located at [https://healthchecks.io/docs/api/](https://healthchecks.io/docs/api/). This Ansible module strives for API parity.
