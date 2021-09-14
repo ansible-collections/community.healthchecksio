@@ -18,4 +18,4 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
 
 class TestChecksFlipsInfoPlugin:
     def test_checks_flips_info(self):
-        assert 1 == 1
+        assert False

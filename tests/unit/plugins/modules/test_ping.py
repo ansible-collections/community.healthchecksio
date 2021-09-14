@@ -18,4 +18,4 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
 
 class TestPingPlugin:
     def test_ping(self):
-        assert 1 == 1
+        assert False
