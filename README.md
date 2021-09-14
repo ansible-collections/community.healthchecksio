@@ -1,5 +1,6 @@
 # Healthchecks.io Community Collection
 
+[![coverage](https://img.shields.io/codecov/c/github/ansible-collections/community.healthchecksio)](https://codecov.io/gh/ansible-collections/community.healthchecksio)
 [![black](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/black.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/black.yml)
 [![integration](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-integration.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-integration.yml)
 [![sanity](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-sanity.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-sanity.yml)
