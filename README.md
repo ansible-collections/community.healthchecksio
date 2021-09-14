@@ -6,6 +6,10 @@
 [![unit](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-unit.yml/badge.svg)](https://github.com/ansible-collections/community.healthchecksio/actions/workflows/ansible-test-unit.yml)
 
 This Ansible collection contains modules for assisting in the automation of the [Healthchecks.io](https://healthchecks.io/) monitoring service. To learn more about this service, please read [https://healthchecks.io/about/](https://healthchecks.io/about/).
+
+From their site:
+> Healthchecks.io is an online service for monitoring regularly running tasks such as cron jobs. It uses the Dead man's switch technique: the monitored system must "check in" with Healthchecks.io at regular, configurable time intervals. When Healthchecks.io detects a missed check-in, it sends out alerts.
+
 The service documentation is located at [https://healthchecks.io/docs/](https://healthchecks.io/docs/) and the API documentation is located at [https://healthchecks.io/docs/api/](https://healthchecks.io/docs/api/). This Ansible module strives for API parity.
 
 ## Code of Conduct
@@ -18,9 +22,11 @@ If you encounter abusive behavior, please refer to the [policy violations](https
 
 <!--List available communication channels. In addition to channels specific to your collection, we also recommend to use the following ones.-->
 
-We announce releases and important changes through Ansible's [The Bullhorn newsletter](https://github.com/ansible/community/wiki/News#the-bullhorn). Be sure you are [subscribed](https://eepurl.com/gZmiEP).
+<!--We announce releases and important changes through Ansible's [The Bullhorn newsletter](https://github.com/ansible/community/wiki/News#the-bullhorn). Be sure you are [subscribed](https://eepurl.com/gZmiEP).
 
-Join us in the `#ansible` (general use questions and support), `#ansible-community` (community and collection development questions), and other [IRC channels](https://docs.ansible.com/ansible/devel/community/communication.html#irc-channels).
+Join us in the `#ansible` (general use questions and support), `#ansible-community` (community and collection development questions), and other [IRC channels](https://docs.ansible.com/ansible/devel/community/communication.html#irc-channels).-->
+
+Join us in the `#ansible-healthchecksio` channel of [Libera Chat](https://libera.chat/).
 
 We take part in the global quarterly [Ansible Contributor Summit](https://github.com/ansible/community/wiki/Contributor-Summit) virtually or in-person. Track [The Bullhorn newsletter](https://eepurl.com/gZmiEP) and join us.
 
