@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: Write secret
         shell: bash
-        run: echo "HEALTHCHECKSIO_API_TOKEN='${{ secrets.HEALTHCHECKSIO_API_TOKEN }}'" >secret
+        run: echo "export HEALTHCHECKSIO_API_TOKEN='${{ secrets.HEALTHCHECKSIO_API_TOKEN }}'" >secret
       - name: Upload secret
         uses: actions/upload-artifact@v2
         with:
