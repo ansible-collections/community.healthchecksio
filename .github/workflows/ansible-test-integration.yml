@@ -19,8 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     name: I (Ⓐ${{ matrix.ansible }}+py${{ matrix.python }})
     strategy:
-      fail-fast: false
-      max-parallel: 1  # avoid race conditions
+      # As soon as the first unit test fails, cancel the others to free up the CI queue
+      fail-fast: true
+      max-parallel: 1  # Avoid race conditions
       matrix:
         ansible:
           # - stable-2.9 # Only if your collection supports Ansible 2.9
