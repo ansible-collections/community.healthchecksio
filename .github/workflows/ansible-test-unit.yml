@@ -46,7 +46,7 @@ jobs:
       # OPTIONAL If your unit test requires Python libraries from other collections
       # Install them like this
       - name: Install collection dependencies
-        run: ansible-galaxy collection install ansible.netcommon ansible.utils -p .
+        run: ansible-galaxy collection install ansible.netcommon ansible.utils community.general -p .
 
       # Run the unit tests
       - name: Run unit test
