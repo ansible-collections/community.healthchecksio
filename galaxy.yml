@@ -1,5 +1,4 @@
 # See https://docs.ansible.com/ansible/latest/dev_guide/collections_galaxy_meta.html
-
 namespace: community
 name: healthchecksio
 version: 0.1.0
