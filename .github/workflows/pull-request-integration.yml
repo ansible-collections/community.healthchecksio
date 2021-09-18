@@ -8,6 +8,10 @@ env:
   NAMESPACE: community
   COLLECTION_NAME: healthchecksio
 
+concurrency:
+  group: cloud-integration-tests
+  cancel-in-progress: false
+
 jobs:
 
   approve:
