@@ -1,1 +1,26 @@
-releases: {}
+ancestor: null
+releases:
+  0.1.0:
+    modules:
+    - description: Get the project badges
+      name: badges_info
+      namespace: ''
+    - description: Get a list of integrations
+      name: channels_info
+      namespace: ''
+    - description: Create, delete, update, and pause checks
+      name: checks
+      namespace: ''
+    - description: Get a list of check flips
+      name: checks_flips_info
+      namespace: ''
+    - description: Get a list of checks
+      name: checks_info
+      namespace: ''
+    - description: Get a list of check pings
+      name: checks_pings_info
+      namespace: ''
+    - description: Signal success, fail, and start events
+      name: ping
+      namespace: ''
+    release_date: '2021-10-24'
