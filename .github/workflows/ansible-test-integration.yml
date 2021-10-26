@@ -25,7 +25,7 @@ jobs:
         with:
           # ansible-core-version:
           pre-test-cmd: >-  # Configure integration test run
-            HEALTHCHECKSIO_API_TOKEN: ${{ secrets.HEALTHCHECKSIO_API_TOKEN }}
+            HEALTHCHECKSIO_API_TOKEN=${{ secrets.HEALTHCHECKSIO_API_TOKEN }}
             ./tests/utils/render.sh
             tests/integration/integration_config.yml.template
             > tests/integration/integration_config.yml
