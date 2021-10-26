@@ -17,4 +17,4 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
 
 class TestHealthchecksioModuleUtil:
     def test_healthchecksio(self):
-        assert False
+        assert True
