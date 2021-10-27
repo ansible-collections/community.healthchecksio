@@ -232,7 +232,7 @@ ansible-galaxy collection install community.healthchecksio --upgrade
 You can also install a specific version of the collection, for example, if you need to downgrade when something is broken in the latest version (please report an issue in this repository). Use the following syntax to install version `0.1.0`:
 
 ```bash
-ansible-galaxy collection install community.healthchecksio:==0.1.0
+ansible-galaxy collection install community.healthchecksio
 ```
 
 See [Ansible Using collections](https://docs.ansible.com/ansible/devel/user_guide/collections_using.html) for more details.
@@ -245,10 +245,7 @@ See the [changelog](https://github.com/ansible-collections/REPONAMEHERE/tree/mai
 
 <!-- Optional. Include the roadmap for this collection, and the proposed release/versioning strategy so users can anticipate the upgrade/update cycle. -->
 
-```yaml
-[ ] Get a release out :)
-[ ] Write some unit tests
-```
+There's a pinboard issue [here](https://github.com/ansible-collections/community.healthchecksio/issues/2) and we can have discussions [here](https://github.com/ansible-collections/community.healthchecksio/discussions).
 
 ## More information
 

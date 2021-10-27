@@ -5,6 +5,14 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v0.1.1
+======
+
+Release Summary
+---------------
+
+Updating the README.md and switching the integration tests to GHAs (https://github.com/ansible-collections/community.healthchecksio/pull/9).
+
 v0.1.0
 ======
 
