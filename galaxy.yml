@@ -10,7 +10,6 @@ description: Healthchecks.io Ansible Collection
 license_file: LICENSE
 tags:
   - healthchecks
-  - healthchecks.io
 repository: https://github.com/ansible-collections/community.healthchecksio
 #documentation: https://github.com/ansible-collection-migration/community.REPO_NAME/tree/main/docs
 homepage: https://github.com/ansible-collections/community.healthchecksio
