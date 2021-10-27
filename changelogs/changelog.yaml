@@ -24,3 +24,10 @@ releases:
       name: ping
       namespace: ''
     release_date: '2021-10-24'
+  0.1.1:
+    changes:
+      release_summary: Updating the README.md and switching the integration tests
+        to GHAs (https://github.com/ansible-collections/community.healthchecksio/pull/9).
+    fragments:
+    - 0.1.1.yaml
+    release_date: '2021-10-27'
