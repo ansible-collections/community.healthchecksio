@@ -26,7 +26,7 @@ class Response(object):
                 try:
                     json_body = json.loads(to_text(self.info["body"]))
                     return json_body
-                except json.decoder.JSONDecodeError:
+                except ValueError:
                     return {}
             return None
         try:
