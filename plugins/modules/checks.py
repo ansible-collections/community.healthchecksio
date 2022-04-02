@@ -55,7 +55,6 @@ options:
       - Minimum 60 (one minute), maximum 2592000 (30 days).
     type: int
     required: false
-    default: 86400
   grace:
     description:
       - A number of seconds, the grace period for this check.
@@ -68,13 +67,11 @@ options:
       - If you specify both timeout and schedule parameters, Healthchecks.io will create a Cron check and ignore the timeout value.
     type: str
     required: false
-    default: "* * * * *"
   tz:
     description:
       - Server's timezone. This setting only has an effect in combination with the schedule parameter.
     type: str
     required: false
-    default: UTC
   manual_resume:
     description:
       - Controls whether a paused check automatically resumes when pinged (the default) or not.
@@ -120,13 +117,16 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
-- name: Create a check named "test"
+- name: Create a Simple check named "test simple"
   community.healthchecksio.checks:
     state: present
-    name: test
+    name: "test simple"
+    desc: "my simple test check"
     unique: ["name"]
+    tags: ["test", "simple"]
+    timeout: 60
 
-- name: Create a check named "test hourly"
+- name: Create a Cron check named "test hourly"
   community.healthchecksio.checks:
     state: present
     name: "test hourly"
@@ -134,6 +134,7 @@ EXAMPLES = r"""
     tags: ["test", "hourly"]
     desc: "my hourly test check"
     schedule: "0 * * * *"
+    tz: UTC
 """
 
 RETURN = r"""
@@ -198,10 +199,10 @@ def main():
         name=dict(type="str", required=False, default=""),
         tags=dict(type="list", elements="str", required=False, default=[]),
         desc=dict(type="str", required=False, default=""),
-        timeout=dict(type="int", required=False, default=86400),
+        timeout=dict(type="int", required=False),
         grace=dict(type="int", required=False, default=3600),
-        schedule=dict(type="str", required=False, default="* * * * *"),
-        tz=dict(type="str", required=False, default="UTC"),
+        schedule=dict(type="str", required=False),
+        tz=dict(type="str", required=False),
         manual_resume=dict(type="bool", required=False, default=False),
         methods=dict(type="str", required=False, default=""),
         channels=dict(type="str", required=False, default=""),
@@ -212,6 +213,8 @@ def main():
         argument_spec=argument_spec,
         supports_check_mode=True,
         required_if=[("state", "absent", ["uuid"]), ("state", "pause", ["uuid"])],
+        required_together=[("schedule", "tz")],
+        mutually_exclusive=[("timeout", "schedule"), ("timeout", "tz")],
     )
 
     run(module)

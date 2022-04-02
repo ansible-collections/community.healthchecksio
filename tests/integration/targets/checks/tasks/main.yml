@@ -8,12 +8,14 @@
         - api_key is not defined
         - api_key | length == 0
 
-    - name: Create a check named "test"
+    - name: Create a Cron check named "cron test"
       community.healthchecksio.checks:
         state: present
         api_key: "{{ api_key }}"
-        name: test
+        name: cron test
         unique: ["name"]
+        schedule: 7 7 * * *
+        tz: UTC
       register: result
 
     - name: Verify integrations
@@ -22,14 +24,18 @@
           - result.changed
           - result.data is defined
           - result.data.name is defined
-          - result.data.name == "test"
+          - result.data.name == "cron test"
           - result.uuid is defined
 
     - name: Set a fact for the check
       ansible.builtin.set_fact:
         uuid: "{{ result.uuid }}"
 
-    - name: Delete a check named "test"
+    - name: Pause for ten seconds
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Delete the Cron check
       community.healthchecksio.checks:
         state: absent
         api_key: "{{ api_key }}"
@@ -42,3 +48,60 @@
           - result.changed
           - result.msg is defined
           - "result.msg == 'Check {{ uuid }} successfully deleted'"
+
+    - name: Create a Simple check named "simple test"
+      community.healthchecksio.checks:
+        state: present
+        api_key: "{{ api_key }}"
+        name: simple test
+        unique: ["name"]
+        timeout: 77
+      register: result
+
+    - name: Verify integrations
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.data is defined
+          - result.data.name is defined
+          - result.data.name == "simple test"
+          - result.uuid is defined
+
+    - name: Set a fact for the check
+      ansible.builtin.set_fact:
+        uuid: "{{ result.uuid }}"
+
+    - name: Pause for ten seconds
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: Delete the Simple check
+      community.healthchecksio.checks:
+        state: absent
+        api_key: "{{ api_key }}"
+        uuid: "{{ uuid }}"
+      register: result
+
+    - name: Verify integrations
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.msg is defined
+          - "result.msg == 'Check {{ uuid }} successfully deleted'"
+
+    - name: Create an invalid check (mutally exclusive)
+      community.healthchecksio.checks:
+        state: present
+        api_key: "{{ api_key }}"
+        name: simple test
+        unique: ["name"]
+        timeout: 77
+        schedule: 7 7 * * *
+      register: result
+      ignore_errors: true
+
+    - name: Verify integrations
+      ansible.builtin.assert:
+        that:
+          - result.failed
+          - result.msg is search("parameters are mutually exclusive")
