@@ -31,3 +31,18 @@ releases:
     fragments:
     - 0.1.1.yaml
     release_date: '2021-10-27'
+  1.1.1:
+    changes:
+      release_summary: Adding support for Simple checks.
+      breaking_changes:
+      - checks - support creating Simple checks. Previously, C(schedule) and C(tz)
+        were defaulted which made it impossible to differentiate between Simple and
+        Cron checks when creating them. Now, either C(schedule) and C(tz) must be
+        provided to create a Cron check, or, C(timeout) must be provided to create
+        a Simple check (https://github.com/ansible-collections/community.healthchecksio/issues/16).
+      bugfixes:
+      - Update the tests so that they only run once (https://github.com/ansible-collections/community.healthchecksio/issues/11).
+    fragments:
+    - 11-tests-running-twice.yaml
+    - 16-create-simple-checks.yaml
+    release_date: '2022-04-06'

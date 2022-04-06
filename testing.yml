@@ -1,0 +1,36 @@
+---
+- name: testing
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tasks:
+
+    - name: Create a check named "test hourly"
+      community.healthchecksio.checks:
+        state: present
+        name: "test hourly"
+        unique: ["name"]
+        tags: ["test", "hourly"]
+        desc: "my hourly test check"
+        schedule: "0 * * * *"
+        tz: UTC
+
+    - name: Create a simple check named "test simple"
+      community.healthchecksio.checks:
+        state: present
+        name: "test simple"
+        unique: ["name"]
+        tags: ["test", "simple"]
+        desc: "my simple test check"
+        timeout: 333
+
+    - name: Create a simple check named "test simple"
+      community.healthchecksio.checks:
+        state: present
+        name: "test simple"
+        unique: ["name"]
+        tags: ["test", "simple"]
+        desc: "my simple test check"
+        timeout: 333
+        schedule: "0 * * * *"
