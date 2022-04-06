@@ -293,6 +293,16 @@ class Checks(object):
         # uuid is not used to create or update, pop it
         del request_params["uuid"]
 
+        # if schedule and tz, create a Cron check
+        if request_params.get("schedule") and request_params.get("tz"):
+            del request_params["grace"]
+            del request_params["timeout"]
+
+        # if timeout, create a Simple check
+        if request_params.get("timeout"):
+            del request_params["schedule"]
+            del request_params["tz"]
+
         tags = self.module.params.get("tags", [])
         request_params["tags"] = " ".join(tags)
 
