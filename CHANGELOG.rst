@@ -5,6 +5,25 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v1.1.1
+======
+
+Release Summary
+---------------
+
+Adding support for Simple checks.
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- checks - support creating Simple checks. Previously, C(schedule) and C(tz) were defaulted which made it impossible to differentiate between Simple and Cron checks when creating them. Now, either C(schedule) and C(tz) must be provided to create a Cron check, or, C(timeout) must be provided to create a Simple check (https://github.com/ansible-collections/community.healthchecksio/issues/16).
+
+Bugfixes
+--------
+
+- Update the tests so that they only run once (https://github.com/ansible-collections/community.healthchecksio/issues/11).
+- ping - remove C(default="") on required C(uuid) parameter (https://github.com/ansible-collections/community.healthchecksio/issues/19).
+
 v0.1.1
 ======
 
