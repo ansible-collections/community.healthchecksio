@@ -28,7 +28,6 @@ options:
       - Check uuid to delete when state is C(absent) or C(pause).
     type: str
     required: true
-    default: ""
   signal:
     description:
       - Type of signal to send, C(success), C(fail) or C(start).
