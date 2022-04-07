@@ -1,2 +1,0 @@
-bugfixes:
-  - ping - remove C(default="") on required C(uuid) parameter (https://github.com/ansible-collections/community.healthchecksio/issues/19).

@@ -22,6 +22,7 @@ Bugfixes
 --------
 
 - Update the tests so that they only run once (https://github.com/ansible-collections/community.healthchecksio/issues/11).
+- ping - remove C(default="") on required C(uuid) parameter (https://github.com/ansible-collections/community.healthchecksio/issues/19).
 
 v0.1.1
 ======
