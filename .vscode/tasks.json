@@ -75,24 +75,7 @@
                 "showReuseMessage": true,
                 "clear": true
             },
-            "problemMatcher": {
-                "owner": "unit",
-                "pattern": [
-                    {
-                        "regexp": "^(.+):(\\d+):",
-                        "file": 1,
-                        "line": 2
-                    },
-                    {
-                        "regexp": ""
-                    },
-                    {
-                        "regexp": "^(E|W)\\s+(.+)$",
-                        "severity": 1,
-                        "message": 2
-                    }
-                ]
-            }
+            "problemMatcher": {}
         },
     ]
 }
