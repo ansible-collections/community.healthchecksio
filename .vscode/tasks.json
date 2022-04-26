@@ -4,6 +4,17 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Run all tests",
+            "dependsOn": [
+                "Run sanity tests",
+                "Run unit tests",
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Run sanity tests",
             "type": "shell",
             "command": "ansible-test",
@@ -37,6 +48,44 @@
                         "column": 4,
                         "message": 5,
                         "loop": true
+                    }
+                ]
+            }
+        },
+        {
+            "label": "Run unit tests",
+            "type": "shell",
+            "command": "ansible-test",
+            "args": [
+                "units",
+                "--docker",
+                "default",
+                "-v"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            },
+            "problemMatcher": {
+                "owner": "unit",
+                "pattern": [
+                    {
+                        "regexp": "^(.+):(\\d+):",
+                        "file": 1,
+                        "line": 2
+                    },
+                    {
+                        "regexp": ""
+                    },
+                    {
+                        "regexp": "^(E|W)\\s+(.+)$",
+                        "severity": 1,
+                        "message": 2
                     }
                 ]
             }
