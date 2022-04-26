@@ -213,13 +213,20 @@ class ChecksInfo(object):
         endpoint = "checks"
 
         tags = self.module.params.get("tags", None)
+        uuid = self.module.params.get("uuid", None)
+
+        if uuid is not None and tags is not None:
+            self.module.fail_json(
+                changed=False,
+                msg="tags and uuid arguments are mutually exclusive and cannot both be provided.",
+            )
+
         if tags is not None:
             tags = ["tag=" + tag for tag in tags]
             tags = "&".join(tags)
             if tags:
                 endpoint += "?" + tags
 
-        uuid = self.module.params.get("uuid", None)
         if uuid is not None:
             endpoint += "/" + uuid
 

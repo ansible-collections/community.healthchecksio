@@ -139,3 +139,27 @@ class TestChecksInfo(ResourceTests):
         helper.get.assert_not_called()
         module.exit_json.assert_called_once_with(changed=False, data={})
         module.fail_json.assert_not_called()
+
+    def test_get_whenTagsAndUuidPresent(self):
+        # Setup
+        module_params = {
+            'tags': ['a'],
+            'uuid': '12345'
+        }
+
+        module = self._setupModule(module_params)
+        helper = self._setupHelper()
+
+        resource = ChecksInfo(module)
+        resource.rest = helper
+
+        # Run
+        try:
+            result = resource.get()
+        except AnsibleFailJson:
+            pass
+
+        # Assertions
+        helper.get.assert_not_called()
+        module.exit_json.assert_not_called()
+        module.fail_json.assert_not_called(changed=False, msg="tags and uuid arguments are mutually exclusive and cannot both be provided.")
