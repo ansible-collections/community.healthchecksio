@@ -2,8 +2,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import pytest
 from http import HTTPStatus
-
 from mock import patch, MagicMock
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
@@ -85,10 +85,20 @@ class TestChecksInfo(ResourceTests):
         module.fail_json.assert_called_once_with(changed=False, msg="Failed to get checks [HTTP 400]")
         module.exit_json.assert_not_called()
 
-    def test_get_whenSuccessful(self):
+    @pytest.mark.parametrize(
+        "tags,uuid,expected_url",
+        [
+            (None, None, 'checks'),
+            (['a'], None, 'checks?tag=a'),
+            (['a', 'b', 'c'], None, 'checks?tag=a&tag=b&tag=c'),
+            (None, '12345', 'checks/12345'),
+        ]
+    )
+    def test_get_whenSuccessful(self, tags, uuid, expected_url):
         # Setup
         module_params = {
-            'test_param': 'param_value'
+            'tags': tags,
+            'uuid': uuid
         }
         response_json = {
             'test': 'value'
@@ -107,7 +117,7 @@ class TestChecksInfo(ResourceTests):
             pass
 
         # Assertions
-        helper.get.assert_called_with('checks')
+        helper.get.assert_called_with(expected_url)
         module.exit_json.assert_called_once_with(changed=False, data=response_json)
         module.fail_json.assert_not_called()
 
