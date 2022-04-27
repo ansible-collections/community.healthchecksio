@@ -45,9 +45,88 @@ class AnsibleFailJson(Exception):
 
 
 class TestHealthchecksioModuleUtil:
-    def test_healthchecksio(self):
-        assert True
 
+    @pytest.fixture(params=['GET', 'POST', 'PUT', 'PATCH', 'HEAD', 'DELETE'])
+    def http_method(self, request):
+        return request.param
+
+    @pytest.fixture(params=['', '/', 'test', '/test', '/test/', '/test/test', '/test?test=test'])
+    def path(self, request):
+        return request.param
+
+    @pytest.fixture(params=['test_token', 'test_token2'])
+    def api_token(self, request):
+        return request.param
+
+    @pytest.fixture(params=[1, 10, 30, None])
+    def timeout(self, request):
+        return request.param
+
+    @pytest.fixture(params=[None, {'test': 'value'}])
+    def data(self, request):
+        return request.param
+
+    def test_send(self, http_method, path, data, api_token, timeout):
+        module = MagicMock()
+        module.params = {
+            "api_token": api_token,
+            "timeout": timeout,
+        }
+        module.jsonify.return_value = 'jsonified_data'
+
+        with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.fetch_url') as mock_fetch:
+            with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.Response') as mock_response:
+                fetch_response = MagicMock()
+                fetch_info = MagicMock()
+                mock_fetch.return_value = (fetch_response, fetch_info)
+
+                mock_response.return_value.json = data
+                mock_response.return_value.status_code = HTTPStatus.OK
+
+                helper = HealthchecksioHelper(module)
+                response = helper.send(http_method, path, data)
+
+                assert response.status_code == HTTPStatus.OK
+                assert response.json == data
+                mock_fetch.assert_called_with(
+                    module,
+                    'https://healthchecks.io/api/v1{0}{1}'.format(
+                        ('' if path.startswith('/') else '/'),
+                        path),
+                    data='jsonified_data',
+                    headers={'X-Api-Key':api_token},
+                    method=http_method,
+                    timeout=timeout)
+                module.jsonify.assert_called_with(data)
+
+    def test_head(self, path, data, api_token, timeout):
+        module = MagicMock()
+        module.params = {
+            "api_token": api_token,
+            "timeout": timeout,
+        }
+
+        with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.fetch_url') as mock_fetch:
+            with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.Response') as mock_response:
+                fetch_response = MagicMock()
+                fetch_info = MagicMock()
+                mock_fetch.return_value = (fetch_response, fetch_info)
+
+                mock_response.return_value.json = data
+                mock_response.return_value.status_code = HTTPStatus.OK
+
+                helper = HealthchecksioHelper(module)
+                response = helper.head(path, data)
+
+                assert response.status_code == HTTPStatus.OK
+                assert response.json == data
+                mock_fetch.assert_called_with(
+                    module,
+                    'https://hc-ping.com/{0}'.format(path),
+                    data=data,
+                    headers={'X-Api-Key':api_token},
+                    method='HEAD',
+                    timeout=timeout)
 
 class ResourceTests:
 

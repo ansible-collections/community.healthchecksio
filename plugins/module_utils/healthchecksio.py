@@ -52,7 +52,7 @@ class HealthchecksioHelper:
             self.module.fail_json(msg="Failed to login using API token")
 
     def _url_builder(self, path):
-        if path[0] == "/":
+        if path and path[0] == "/":
             path = path[1:]
         return "%s/%s" % (self.baseurl, path)
 
