@@ -10,6 +10,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     HealthchecksioHelper,
     BadgesInfo,
     ChannelsInfo,
+    ChecksFlipsInfo,
     ChecksInfo,
 )
 
@@ -138,6 +139,74 @@ class SimpleResourceTests(ResourceTests):
         self._assertModuleExit()
 
 
+class CheckSubResourceTests(ResourceTests):
+    '''
+    Base class for testing sub-resources of checks (e.g. pings and flips)
+    '''
+    _UUIDS = [
+        '00000000-0000-0000-0000-000000000000',
+        'dfa582de-caa3-447f-9d02-7c481c80408c',
+    ]
+
+    @property
+    def expected_sub_url(self):
+        raise NotImplementedError()
+
+    def _get_expected_url(self, uuid):
+        return "checks/{}/{}".format(uuid, self.expected_sub_url)
+
+
+    @pytest.mark.parametrize("uuid", _UUIDS)
+    def test_get_whenErrorStatus(self, uuid):
+        # Setup
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+        self._setupModule({ 'uuid': uuid })
+
+        # Run
+        try:
+            result = self._resource.get()
+        except AnsibleFailJson:
+            pass
+
+        # Assertions
+        expected_url = self._get_expected_url(uuid)
+        self._hcHelper.get.assert_called_with(expected_url)
+        self._assertModuleFail("Failed to get {} [HTTP 400]".format(expected_url))
+
+    @pytest.mark.parametrize("uuid", _UUIDS)
+    def test_get_whenSuccessful(self, uuid):
+        # Setup
+        response_json = {
+            'test': 'value'
+        }
+        self._setupHelper(response_json)
+        self._setupModule({ 'uuid': uuid })
+
+        # Run
+        try:
+            result = self._resource.get()
+        except AnsibleExitJson:
+            pass
+
+        # Assertions
+        self._hcHelper.get.assert_called_with(self._get_expected_url(uuid))
+        self._assertModuleExit(response_json)
+
+    def test_get_whenCheckMode(self):
+        # Setup
+        self._setupModule(check_mode=True)
+
+        # Run
+        try:
+            result = self._resource.get()
+        except AnsibleExitJson:
+            pass
+
+        # Assertions
+        self._hcHelper.get.assert_not_called()
+        self._assertModuleExit()
+
+
 class TestBadgesInfo(SimpleResourceTests):
 
     @property
@@ -158,6 +227,17 @@ class TestChannelsInfo(SimpleResourceTests):
     @property
     def expected_url(self):
         return 'channels'
+
+
+class TestChecksFlipsInfo(CheckSubResourceTests):
+
+    @property
+    def resource_class(self):
+        return ChecksFlipsInfo
+
+    @property
+    def expected_sub_url(self):
+        return 'flips'
 
 
 class TestChecksInfo(ResourceTests):
