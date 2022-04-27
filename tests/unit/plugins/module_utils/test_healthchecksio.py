@@ -66,7 +66,17 @@ class TestHealthchecksioModuleUtil:
     def data(self, request):
         return request.param
 
-    def test_send(self, http_method, path, data, api_token, timeout):
+    @pytest.fixture(params=[HTTPStatus.OK, HTTPStatus.BAD_REQUEST])
+    def response_status_code(self, request):
+        return request.param
+
+    @staticmethod
+    def _setup_response(mock_fetch, mock_response, data, status_code):
+        mock_fetch.return_value = (MagicMock(), MagicMock())
+        mock_response.return_value.json = data
+        mock_response.return_value.status_code = status_code
+
+    def test_send(self, http_method, path, data, api_token, timeout, response_status_code):
         module = MagicMock()
         module.params = {
             "api_token": api_token,
@@ -76,17 +86,12 @@ class TestHealthchecksioModuleUtil:
 
         with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.fetch_url') as mock_fetch:
             with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.Response') as mock_response:
-                fetch_response = MagicMock()
-                fetch_info = MagicMock()
-                mock_fetch.return_value = (fetch_response, fetch_info)
-
-                mock_response.return_value.json = data
-                mock_response.return_value.status_code = HTTPStatus.OK
+                self._setup_response(mock_fetch, mock_response, data, response_status_code)
 
                 helper = HealthchecksioHelper(module)
                 response = helper.send(http_method, path, data)
 
-                assert response.status_code == HTTPStatus.OK
+                assert response.status_code == response_status_code
                 assert response.json == data
                 mock_fetch.assert_called_with(
                     module,
@@ -99,7 +104,7 @@ class TestHealthchecksioModuleUtil:
                     timeout=timeout)
                 module.jsonify.assert_called_with(data)
 
-    def test_head(self, path, data, api_token, timeout):
+    def test_head(self, path, data, api_token, timeout, response_status_code):
         module = MagicMock()
         module.params = {
             "api_token": api_token,
@@ -108,17 +113,12 @@ class TestHealthchecksioModuleUtil:
 
         with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.fetch_url') as mock_fetch:
             with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.Response') as mock_response:
-                fetch_response = MagicMock()
-                fetch_info = MagicMock()
-                mock_fetch.return_value = (fetch_response, fetch_info)
-
-                mock_response.return_value.json = data
-                mock_response.return_value.status_code = HTTPStatus.OK
+                self._setup_response(mock_fetch, mock_response, data, response_status_code)
 
                 helper = HealthchecksioHelper(module)
                 response = helper.head(path, data)
 
-                assert response.status_code == HTTPStatus.OK
+                assert response.status_code == response_status_code
                 assert response.json == data
                 mock_fetch.assert_called_with(
                     module,
