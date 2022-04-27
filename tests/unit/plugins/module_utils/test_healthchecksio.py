@@ -82,6 +82,11 @@ class ResourceTests:
 
 
 class SimpleResourceTests(ResourceTests):
+    '''
+    Base class for testing simple resources which do not have any parameters and passthrough response data.
+
+    Includes 3 tests which are used for all inheriting classes.
+    '''
 
     @property
     def expected_url(self):
