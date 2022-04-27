@@ -11,6 +11,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     ChecksInfo,
 )
 
+
 class AnsibleExitJson(Exception):
     """
     Exception class to be raised by module.exit_json and caught by the test case
@@ -36,54 +37,58 @@ class TestHealthchecksioModuleUtil:
 
 class ResourceTests:
 
-    @staticmethod
-    def _setupModule(module_params={}, check_mode=False):
-        mockModule = MagicMock()
-        mockModule.params = module_params
-        mockModule.check_mode = check_mode
+    @property
+    def resourceClass(self):
+        raise NotImplementedError('Resource class property not implemented.')
 
-        mockModule.fail_json.side_effect = AnsibleFailJson
-        mockModule.exit_json.side_effect = AnsibleExitJson
+    def setup_method(self):
+        self._module = MagicMock()
+        self._module.fail_json.side_effect = AnsibleFailJson
+        self._module.exit_json.side_effect = AnsibleExitJson
+        self._setupModule()
 
-        return mockModule
+        # Patch the helper to avoid an auth error
+        with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.HealthchecksioHelper') as mockHelper:
+            self._hcHelper = mockHelper
+            self._resource = self.resourceClass(self._module)
+            self._resource.rest = self._hcHelper
 
-    @staticmethod
-    def _setupHelper(response_json={}, status_code=HTTPStatus.OK):
-        mock = MagicMock()
-        mock.get.return_value.json = response_json
-        mock.get.return_value.status_code = status_code
-        return mock
+        self._hcHelper.reset_mock()
+        self._setupHelper()
+
+    def _setupModule(self, module_params=None, check_mode=False):
+        module_params = module_params if module_params else {}
+
+        self._module.params = module_params
+        self._module.check_mode = check_mode
+
+    def _setupHelper(self, response_json=None, status_code=HTTPStatus.OK):
+        response_json = response_json if response_json else {}
+
+        self._hcHelper.get.return_value.json = response_json
+        self._hcHelper.get.return_value.status_code = status_code
 
 
 class TestChecksInfo(ResourceTests):
 
+    @property
+    def resourceClass(self):
+        return ChecksInfo
+
     def test_get_whenErrorStatus(self):
         # Setup
-        module_params = {
-            'test_param': 'param_value'
-        }
-        response_json = {
-            'test': 'value'
-        }
-
-        module = self._setupModule(module_params)
-        helper = self._setupHelper(response_json, status_code=HTTPStatus.BAD_REQUEST)
-
-        assert helper.get().status_code == 400
-
-        resource = ChecksInfo(module)
-        resource.rest = helper
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
 
         # Run
         try:
-            result = resource.get()
+            result = self._resource.get()
         except AnsibleFailJson:
             pass
 
         # Assertions
-        helper.get.assert_called_with('checks')
-        module.fail_json.assert_called_once_with(changed=False, msg="Failed to get checks [HTTP 400]")
-        module.exit_json.assert_not_called()
+        self._hcHelper.get.assert_called_with('checks')
+        self._module.fail_json.assert_called_once_with(changed=False, msg="Failed to get checks [HTTP 400]")
+        self._module.exit_json.assert_not_called()
 
     @pytest.mark.parametrize(
         "tags,uuid,expected_url",
@@ -96,70 +101,56 @@ class TestChecksInfo(ResourceTests):
     )
     def test_get_whenSuccessful(self, tags, uuid, expected_url):
         # Setup
-        module_params = {
+        self._setupModule({
             'tags': tags,
             'uuid': uuid
-        }
+        })
+
         response_json = {
             'test': 'value'
         }
-
-        module = self._setupModule(module_params)
-        helper = self._setupHelper(response_json)
-
-        resource = ChecksInfo(module)
-        resource.rest = helper
+        self._setupHelper(response_json)
 
         # Run
         try:
-            result = resource.get()
+            result = self._resource.get()
         except AnsibleExitJson:
             pass
 
         # Assertions
-        helper.get.assert_called_with(expected_url)
-        module.exit_json.assert_called_once_with(changed=False, data=response_json)
-        module.fail_json.assert_not_called()
+        self._hcHelper.get.assert_called_with(expected_url)
+        self._module.exit_json.assert_called_once_with(changed=False, data=response_json)
+        self._module.fail_json.assert_not_called()
 
     def test_get_whenCheckMode(self):
         # Setup
-        module = self._setupModule(check_mode=True)
-        helper = self._setupHelper()
-
-        resource = ChecksInfo(module)
-        resource.rest = helper
+        self._setupModule(check_mode=True)
 
         # Run
         try:
-            result = resource.get()
+            result = self._resource.get()
         except AnsibleExitJson:
             pass
 
         # Assertions
-        helper.get.assert_not_called()
-        module.exit_json.assert_called_once_with(changed=False, data={})
-        module.fail_json.assert_not_called()
+        self._hcHelper.get.assert_not_called()
+        self._module.exit_json.assert_called_once_with(changed=False, data={})
+        self._module.fail_json.assert_not_called()
 
     def test_get_whenTagsAndUuidPresent(self):
         # Setup
-        module_params = {
+        self._setupModule({
             'tags': ['a'],
             'uuid': '12345'
-        }
-
-        module = self._setupModule(module_params)
-        helper = self._setupHelper()
-
-        resource = ChecksInfo(module)
-        resource.rest = helper
+        })
 
         # Run
         try:
-            result = resource.get()
+            result = self._resource.get()
         except AnsibleFailJson:
             pass
 
         # Assertions
-        helper.get.assert_not_called()
-        module.exit_json.assert_not_called()
-        module.fail_json.assert_not_called(changed=False, msg="tags and uuid arguments are mutually exclusive and cannot both be provided.")
+        self._hcHelper.get.assert_not_called()
+        self._module.exit_json.assert_not_called()
+        self._module.fail_json.assert_called_once_with(changed=False, msg="tags and uuid arguments are mutually exclusive and cannot both be provided.")
