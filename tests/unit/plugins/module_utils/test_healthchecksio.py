@@ -122,7 +122,7 @@ class SimpleResourceTests(ResourceTests):
 
         # Assertions
         self._hcHelper.get.assert_called_with(self.expected_url)
-        self._assertModuleFail("Failed to get {} [HTTP 400: (empty error message)]".format(self.expected_url))
+        self._assertModuleFail("Failed to get {0} [HTTP 400: (empty error message)]".format(self.expected_url))
 
     def test_get_whenSuccessful(self):
         # Setup
@@ -165,12 +165,12 @@ class CheckSubResourceTests(ResourceTests):
         raise NotImplementedError()
 
     def _get_expected_url(self, uuid):
-        return "checks/{}/{}".format(uuid, self.expected_sub_url)
+        return "checks/{0}/{1}".format(uuid, self.expected_sub_url)
 
     def test_get_whenErrorStatus(self, uuid):
         # Setup
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
-        self._setupModule({ 'uuid': uuid })
+        self._setupModule({'uuid': uuid})
 
         # Run
         try:
@@ -181,7 +181,7 @@ class CheckSubResourceTests(ResourceTests):
         # Assertions
         expected_url = self._get_expected_url(uuid)
         self._hcHelper.get.assert_called_with(expected_url)
-        self._assertModuleFail("Failed to get {} [HTTP 400: (empty error message)]".format(expected_url))
+        self._assertModuleFail("Failed to get {0} [HTTP 400: (empty error message)]".format(expected_url))
 
     def test_get_whenSuccessful(self, uuid):
         # Setup
@@ -189,7 +189,7 @@ class CheckSubResourceTests(ResourceTests):
             'test': 'value'
         }
         self._setupHelper(response_json)
-        self._setupModule({ 'uuid': uuid })
+        self._setupModule({'uuid': uuid})
 
         # Run
         try:
@@ -396,7 +396,7 @@ class TestPing(ResourceTests):
 
     def test_create_whenSuccess(self, uuid, signal):
         # Setup
-        expected_url = uuid if signal == 'success' else "{}/{}".format(uuid, signal)
+        expected_url = uuid if signal == 'success' else "{0}/{1}".format(uuid, signal)
 
         # Run
         try:
@@ -406,11 +406,11 @@ class TestPing(ResourceTests):
 
         # Assertions
         self._hcHelper.head.assert_called_with(expected_url)
-        self._assertModuleExitMsg('Sent {} signal to {}'.format(signal, expected_url), expected_changed=True)
+        self._assertModuleExitMsg('Sent {0} signal to {1}'.format(signal, expected_url), expected_changed=True)
 
     def test_create_whenErrorStatus(self, uuid, signal):
         # Setup
-        expected_url = uuid if signal == 'success' else "{}/{}".format(uuid, signal)
+        expected_url = uuid if signal == 'success' else "{0}/{1}".format(uuid, signal)
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
 
         # Run
@@ -421,7 +421,7 @@ class TestPing(ResourceTests):
 
         # Assertions
         self._hcHelper.head.assert_called_with(expected_url)
-        self._assertModuleFail('Failed to send {} signal to {} [HTTP 400]'.format(signal, expected_url))
+        self._assertModuleFail('Failed to send {0} signal to {1} [HTTP 400]'.format(signal, expected_url))
 
     def test_create_whenCheckMode(self):
         # Setup
@@ -436,5 +436,3 @@ class TestPing(ResourceTests):
         # Assertions
         self._hcHelper.head.assert_not_called()
         self._assertModuleExit()
-
-
