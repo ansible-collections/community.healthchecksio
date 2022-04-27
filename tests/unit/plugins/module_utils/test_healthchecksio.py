@@ -9,6 +9,7 @@ from mock import patch, MagicMock
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
     BadgesInfo,
+    ChannelsInfo,
     ChecksInfo,
 )
 
@@ -39,8 +40,8 @@ class TestHealthchecksioModuleUtil:
 class ResourceTests:
 
     @property
-    def resourceClass(self):
-        raise NotImplementedError('Resource class property not implemented.')
+    def resource_class(self):
+        raise NotImplementedError()
 
     def setup_method(self):
         self._module = MagicMock()
@@ -51,7 +52,7 @@ class ResourceTests:
         # Patch the helper to avoid an auth error
         with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.HealthchecksioHelper') as mockHelper:
             self._hcHelper = mockHelper
-            self._resource = self.resourceClass(self._module)
+            self._resource = self.resource_class(self._module)
             self._resource.rest = self._hcHelper
 
         self._hcHelper.reset_mock()
@@ -80,11 +81,11 @@ class ResourceTests:
         self._module.fail_json.assert_not_called()
 
 
-class TestBadgesInfo(ResourceTests):
+class SimpleResourceTests(ResourceTests):
 
     @property
-    def resourceClass(self):
-        return BadgesInfo
+    def expected_url(self):
+        raise NotImplementedError()
 
     def test_get_whenErrorStatus(self):
         # Setup
@@ -97,8 +98,8 @@ class TestBadgesInfo(ResourceTests):
             pass
 
         # Assertions
-        self._hcHelper.get.assert_called_with('badges')
-        self._assertModuleFail("Failed to get badges [HTTP 400: (empty error message)]")
+        self._hcHelper.get.assert_called_with(self.expected_url)
+        self._assertModuleFail("Failed to get {} [HTTP 400: (empty error message)]".format(self.expected_url))
 
     def test_get_whenSuccessful(self):
         # Setup
@@ -114,7 +115,7 @@ class TestBadgesInfo(ResourceTests):
             pass
 
         # Assertions
-        self._hcHelper.get.assert_called_with('badges')
+        self._hcHelper.get.assert_called_with(self.expected_url)
         self._assertModuleExit(response_json)
 
     def test_get_whenCheckMode(self):
@@ -132,10 +133,32 @@ class TestBadgesInfo(ResourceTests):
         self._assertModuleExit()
 
 
+class TestBadgesInfo(SimpleResourceTests):
+
+    @property
+    def resource_class(self):
+        return BadgesInfo
+
+    @property
+    def expected_url(self):
+        return 'badges'
+
+
+class TestChannelsInfo(SimpleResourceTests):
+
+    @property
+    def resource_class(self):
+        return ChannelsInfo
+
+    @property
+    def expected_url(self):
+        return 'channels'
+
+
 class TestChecksInfo(ResourceTests):
 
     @property
-    def resourceClass(self):
+    def resource_class(self):
         return ChecksInfo
 
     def test_get_whenErrorStatus(self):
