@@ -282,10 +282,11 @@ class Checks(object):
         self.rest = HealthchecksioHelper(module)
         self.api_token = module.params.pop("api_token")
 
-    def get_uuid(self, json_data):
+    @staticmethod
+    def get_uuid(json_data):
         ping_url = json_data.get("ping_url", None)
         if ping_url is not None:
-            uuid = ping_url.split("/")[3]
+            uuid = ping_url.split("/")[-1]
             if len(uuid) > 0:
                 return uuid
             else:

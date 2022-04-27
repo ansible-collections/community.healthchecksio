@@ -13,6 +13,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     ChecksFlipsInfo,
     ChecksInfo,
     ChecksPingsInfo,
+    Checks,
     Ping,
 )
 
@@ -342,6 +343,41 @@ class TestChecksInfo(ResourceTests):
         self._assertModuleFail("tags and uuid arguments are mutually exclusive and cannot both be provided.")
 
 
+class TestCheck(ResourceTests):
+
+    @property
+    def resource_class(self):
+        return Checks
+
+    def _setupModule(self, module_params=None, check_mode=False):
+        super()._setupModule(module_params, check_mode)
+
+        if not self._module.params.get('api_token'):
+            self._module.params['api_token'] = 'test_token'
+
+    @pytest.mark.parametrize(
+        "ping_url,expected_result",
+        [
+            # Valid healthchecks.io ping address
+            ('http://hc-ping.com/803f680d-e89b-492b-82ef-2be7b774a92d', '803f680d-e89b-492b-82ef-2be7b774a92d'),
+            # Valid self-host ping address
+            ('http://example.com/ping/803f680d-e89b-492b-82ef-2be7b774a92d', '803f680d-e89b-492b-82ef-2be7b774a92d'),
+            # Invalid addresses
+            ('http://hc-ping.com/', '(unable to determine uuid)'),
+            ('http://example.com/ping/', '(unable to determine uuid)'),
+            ('http://example.com/', '(unable to determine uuid)'),
+            ('', '(unable to determine uuid)'),
+            (None, '(unable to determine uuid)'),
+        ]
+    )
+    def test_get_uuid(self, ping_url, expected_result):
+        json_data = {
+            'ping_url': ping_url
+        }
+        result = Checks.get_uuid(json_data)
+        assert result == expected_result
+
+
 class TestPing(ResourceTests):
 
     @property
@@ -355,7 +391,7 @@ class TestPing(ResourceTests):
     def _setupModule(self, module_params=None, check_mode=False):
         super()._setupModule(module_params, check_mode)
 
-        if self._module.params.get('api_token') is None: # Specifically check for None
+        if not self._module.params.get('api_token'):
             self._module.params['api_token'] = 'test_token'
 
     def test_create_whenSuccess(self, uuid, signal):
