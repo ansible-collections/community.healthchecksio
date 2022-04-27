@@ -12,6 +12,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     ChannelsInfo,
     ChecksFlipsInfo,
     ChecksInfo,
+    ChecksPingsInfo,
 )
 
 
@@ -171,7 +172,7 @@ class CheckSubResourceTests(ResourceTests):
         # Assertions
         expected_url = self._get_expected_url(uuid)
         self._hcHelper.get.assert_called_with(expected_url)
-        self._assertModuleFail("Failed to get {} [HTTP 400]".format(expected_url))
+        self._assertModuleFail("Failed to get {} [HTTP 400: (empty error message)]".format(expected_url))
 
     @pytest.mark.parametrize("uuid", _UUIDS)
     def test_get_whenSuccessful(self, uuid):
@@ -238,6 +239,17 @@ class TestChecksFlipsInfo(CheckSubResourceTests):
     @property
     def expected_sub_url(self):
         return 'flips'
+
+
+class TestChecksPingsInfo(CheckSubResourceTests):
+
+    @property
+    def resource_class(self):
+        return ChecksPingsInfo
+
+    @property
+    def expected_sub_url(self):
+        return 'pings'
 
 
 class TestChecksInfo(ResourceTests):

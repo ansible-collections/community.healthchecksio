@@ -195,7 +195,11 @@ class ChecksFlipsInfo(object):
         if status_code != 200:
             self.module.fail_json(
                 changed=False,
-                msg="Failed to get {0} [HTTP {1}]".format(endpoint, status_code),
+                msg="Failed to get {0} [HTTP {1}: {2}]".format(
+                    endpoint,
+                    status_code,
+                    json_data.get("message", "(empty error message)")
+                )
             )
 
         self.module.exit_json(changed=False, data=json_data)
