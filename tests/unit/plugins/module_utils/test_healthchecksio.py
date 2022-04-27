@@ -13,7 +13,16 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     ChecksFlipsInfo,
     ChecksInfo,
     ChecksPingsInfo,
+    Ping,
 )
+
+
+@pytest.fixture(params=[
+    '00000000-0000-0000-0000-000000000000',
+    'dfa582de-caa3-447f-9d02-7c481c80408c',
+])
+def uuid(request):
+    return request.param
 
 
 class AnsibleExitJson(Exception):
@@ -71,15 +80,21 @@ class ResourceTests:
 
         self._hcHelper.get.return_value.json = response_json
         self._hcHelper.get.return_value.status_code = status_code
+        self._hcHelper.head.return_value.json = response_json
+        self._hcHelper.head.return_value.status_code = status_code
 
     def _assertModuleFail(self, expected_msg):
         self._module.fail_json.assert_called_once_with(changed=False, msg=expected_msg)
         self._module.exit_json.assert_not_called()
 
-    def _assertModuleExit(self, expected_data=None):
+    def _assertModuleExit(self, expected_data=None, expected_changed=False):
         expected_data = expected_data if expected_data else {}
 
-        self._module.exit_json.assert_called_once_with(changed=False, data=expected_data)
+        self._module.exit_json.assert_called_once_with(changed=expected_changed, data=expected_data)
+        self._module.fail_json.assert_not_called()
+
+    def _assertModuleExitMsg(self, expected_msg, expected_changed=False):
+        self._module.exit_json.assert_called_once_with(changed=expected_changed, msg=expected_msg)
         self._module.fail_json.assert_not_called()
 
 
@@ -144,11 +159,6 @@ class CheckSubResourceTests(ResourceTests):
     '''
     Base class for testing sub-resources of checks (e.g. pings and flips)
     '''
-    _UUIDS = [
-        '00000000-0000-0000-0000-000000000000',
-        'dfa582de-caa3-447f-9d02-7c481c80408c',
-    ]
-
     @property
     def expected_sub_url(self):
         raise NotImplementedError()
@@ -156,8 +166,6 @@ class CheckSubResourceTests(ResourceTests):
     def _get_expected_url(self, uuid):
         return "checks/{}/{}".format(uuid, self.expected_sub_url)
 
-
-    @pytest.mark.parametrize("uuid", _UUIDS)
     def test_get_whenErrorStatus(self, uuid):
         # Setup
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
@@ -174,7 +182,6 @@ class CheckSubResourceTests(ResourceTests):
         self._hcHelper.get.assert_called_with(expected_url)
         self._assertModuleFail("Failed to get {} [HTTP 400: (empty error message)]".format(expected_url))
 
-    @pytest.mark.parametrize("uuid", _UUIDS)
     def test_get_whenSuccessful(self, uuid):
         # Setup
         response_json = {
@@ -333,3 +340,65 @@ class TestChecksInfo(ResourceTests):
         # Assertions
         self._hcHelper.get.assert_not_called()
         self._assertModuleFail("tags and uuid arguments are mutually exclusive and cannot both be provided.")
+
+
+class TestPing(ResourceTests):
+
+    @property
+    def resource_class(self):
+        return Ping
+
+    @pytest.fixture(params=['success', 'fail', 'start'])
+    def signal(self, request):
+        return request.param
+
+    def _setupModule(self, module_params=None, check_mode=False):
+        super()._setupModule(module_params, check_mode)
+
+        if self._module.params.get('api_token') is None: # Specifically check for None
+            self._module.params['api_token'] = 'test_token'
+
+    def test_create_whenSuccess(self, uuid, signal):
+        # Setup
+        expected_url = uuid if signal == 'success' else "{}/{}".format(uuid, signal)
+
+        # Run
+        try:
+            result = self._resource.create(uuid, signal)
+        except AnsibleExitJson:
+            pass
+
+        # Assertions
+        self._hcHelper.head.assert_called_with(expected_url)
+        self._assertModuleExitMsg('Sent {} signal to {}'.format(signal, expected_url), expected_changed=True)
+
+    def test_create_whenErrorStatus(self, uuid, signal):
+        # Setup
+        expected_url = uuid if signal == 'success' else "{}/{}".format(uuid, signal)
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+
+        # Run
+        try:
+            result = self._resource.create(uuid, signal)
+        except AnsibleFailJson:
+            pass
+
+        # Assertions
+        self._hcHelper.head.assert_called_with(expected_url)
+        self._assertModuleFail('Failed to send {} signal to {} [HTTP 400]'.format(signal, expected_url))
+
+    def test_create_whenCheckMode(self):
+        # Setup
+        self._setupModule(check_mode=True)
+
+        # Run
+        try:
+            result = self._resource.create('test', 'success')
+        except AnsibleExitJson:
+            pass
+
+        # Assertions
+        self._hcHelper.head.assert_not_called()
+        self._assertModuleExit()
+
+
