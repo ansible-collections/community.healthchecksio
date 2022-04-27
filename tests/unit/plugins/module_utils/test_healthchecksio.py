@@ -8,6 +8,7 @@ from mock import patch, MagicMock
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
+    BadgesInfo,
     ChecksInfo,
 )
 
@@ -68,6 +69,68 @@ class ResourceTests:
         self._hcHelper.get.return_value.json = response_json
         self._hcHelper.get.return_value.status_code = status_code
 
+    def _assertModuleFail(self, expected_msg):
+        self._module.fail_json.assert_called_once_with(changed=False, msg=expected_msg)
+        self._module.exit_json.assert_not_called()
+
+    def _assertModuleExit(self, expected_data=None):
+        expected_data = expected_data if expected_data else {}
+
+        self._module.exit_json.assert_called_once_with(changed=False, data=expected_data)
+        self._module.fail_json.assert_not_called()
+
+
+class TestBadgesInfo(ResourceTests):
+
+    @property
+    def resourceClass(self):
+        return BadgesInfo
+
+    def test_get_whenErrorStatus(self):
+        # Setup
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+
+        # Run
+        try:
+            result = self._resource.get()
+        except AnsibleFailJson:
+            pass
+
+        # Assertions
+        self._hcHelper.get.assert_called_with('badges')
+        self._assertModuleFail("Failed to get badges [HTTP 400: (empty error message)]")
+
+    def test_get_whenSuccessful(self):
+        # Setup
+        response_json = {
+            'test': 'value'
+        }
+        self._setupHelper(response_json)
+
+        # Run
+        try:
+            result = self._resource.get()
+        except AnsibleExitJson:
+            pass
+
+        # Assertions
+        self._hcHelper.get.assert_called_with('badges')
+        self._assertModuleExit(response_json)
+
+    def test_get_whenCheckMode(self):
+        # Setup
+        self._setupModule(check_mode=True)
+
+        # Run
+        try:
+            result = self._resource.get()
+        except AnsibleExitJson:
+            pass
+
+        # Assertions
+        self._hcHelper.get.assert_not_called()
+        self._assertModuleExit()
+
 
 class TestChecksInfo(ResourceTests):
 
@@ -87,8 +150,7 @@ class TestChecksInfo(ResourceTests):
 
         # Assertions
         self._hcHelper.get.assert_called_with('checks')
-        self._module.fail_json.assert_called_once_with(changed=False, msg="Failed to get checks [HTTP 400]")
-        self._module.exit_json.assert_not_called()
+        self._assertModuleFail("Failed to get checks [HTTP 400]")
 
     @pytest.mark.parametrize(
         "tags,uuid,expected_url",
@@ -119,8 +181,7 @@ class TestChecksInfo(ResourceTests):
 
         # Assertions
         self._hcHelper.get.assert_called_with(expected_url)
-        self._module.exit_json.assert_called_once_with(changed=False, data=response_json)
-        self._module.fail_json.assert_not_called()
+        self._assertModuleExit(response_json)
 
     def test_get_whenCheckMode(self):
         # Setup
@@ -134,8 +195,7 @@ class TestChecksInfo(ResourceTests):
 
         # Assertions
         self._hcHelper.get.assert_not_called()
-        self._module.exit_json.assert_called_once_with(changed=False, data={})
-        self._module.fail_json.assert_not_called()
+        self._assertModuleExit()
 
     def test_get_whenTagsAndUuidPresent(self):
         # Setup
@@ -152,5 +212,4 @@ class TestChecksInfo(ResourceTests):
 
         # Assertions
         self._hcHelper.get.assert_not_called()
-        self._module.exit_json.assert_not_called()
-        self._module.fail_json.assert_called_once_with(changed=False, msg="tags and uuid arguments are mutually exclusive and cannot both be provided.")
+        self._assertModuleFail("tags and uuid arguments are mutually exclusive and cannot both be provided.")
