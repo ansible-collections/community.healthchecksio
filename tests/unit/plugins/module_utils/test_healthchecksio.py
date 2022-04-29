@@ -16,6 +16,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     ChecksPingsInfo,
     Checks,
     Ping,
+    delete_if_exists
 )
 
 
@@ -25,6 +26,29 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
 ])
 def uuid(request):
     return request.param
+
+
+class TestDeleteIfExists:
+
+    __EXPECTED_DICT = {
+        'TEST': 'value'
+    }
+
+    @pytest.mark.parametrize("value", ['value', '', None])
+    def test_values(self, value):
+        test_dict = {
+            'TEST': 'value',
+            'test': value
+        }
+        assert test_dict['test'] == value
+        delete_if_exists(test_dict, 'test')
+        assert test_dict == self.__EXPECTED_DICT
+
+    def test_missing(self):
+        test_dict = self.__EXPECTED_DICT.copy()
+        delete_if_exists(test_dict, 'test')
+        assert test_dict == self.__EXPECTED_DICT
+
 
 
 class TestHealthchecksioModuleUtil:
