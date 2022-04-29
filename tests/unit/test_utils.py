@@ -20,6 +20,7 @@ class AnsibleFailJson(Exception):
     """
     pass
 
+
 class AnsibleModuleTester():
 
     def __init__(self):

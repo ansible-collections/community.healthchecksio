@@ -160,7 +160,7 @@ class TestHealthchecksioModuleUtil:
                         ('' if path.startswith('/') else '/'),
                         path),
                     data='jsonified_data',
-                    headers={'X-Api-Key':api_token},
+                    headers={'X-Api-Key': api_token},
                     method=standard_send_method.upper(),
                     timeout=timeout)
                 module.jsonify.assert_called_with(data)
@@ -185,9 +185,10 @@ class TestHealthchecksioModuleUtil:
                     module,
                     'https://hc-ping.com/{0}'.format(path),
                     data=data,
-                    headers={'X-Api-Key':api_token},
+                    headers={'X-Api-Key': api_token},
                     method='HEAD',
                     timeout=timeout)
+
 
 class ResourceTests:
 
@@ -502,7 +503,7 @@ class TestCheck(ResourceTests):
         # Setup
         self._setupHelper(
             status_code=status_code,
-            response_json = {
+            response_json={
                 'ping_url': self._build_ping_url(uuid)
             })
 
