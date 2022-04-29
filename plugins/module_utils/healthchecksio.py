@@ -385,7 +385,7 @@ class Checks(object):
                 changed=True, msg="Check {0} successfully paused".format(uuid)
             )
         elif status_code == 404:
-            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
+            self.module.fail_json(changed=False, msg="Check {0} not found".format(uuid))
         else:
             self.module.fail_json(
                 changed=False,

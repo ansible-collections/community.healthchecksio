@@ -162,10 +162,9 @@ class ResourceTests:
     def _setupHelper(self, response_json=None, status_code=HTTPStatus.OK):
         response_json = response_json if response_json else {}
 
-        self._hcHelper.get.return_value.json = response_json
-        self._hcHelper.get.return_value.status_code = status_code
-        self._hcHelper.head.return_value.json = response_json
-        self._hcHelper.head.return_value.status_code = status_code
+        for method in ['get', 'post', 'put', 'delete', 'head']:
+            getattr(self._hcHelper, method).return_value.json = response_json
+            getattr(self._hcHelper, method).return_value.status_code = status_code
 
     def _assertModuleFail(self, expected_msg):
         self._module.fail_json.assert_called_once_with(changed=False, msg=expected_msg)
@@ -479,7 +478,7 @@ class TestCheck(ResourceTests):
 
     def test_checkMode(self, method):
         # Setup
-        super()._setupModule(check_mode=True)
+        self._setupModule(check_mode=True)
 
         # Run
         try:
@@ -491,6 +490,36 @@ class TestCheck(ResourceTests):
         # Assertions
         self._hcHelper.send.assert_not_called()
         self._assertModuleExit()
+
+    def _runPauseTest(self, uuid):
+        # Setup
+        self._setupModule({
+            'uuid': uuid
+        })
+
+        # Run
+        try:
+            self._resource.pause()
+        except (AnsibleExitJson, AnsibleFailJson):
+            pass
+
+        # Assertions
+        expected_url = 'checks/{0}/pause'.format(uuid)
+        self._hcHelper.post.assert_called_once_with(expected_url)
+
+    def test_pause_whenSuccess(self, uuid):
+        self._runPauseTest(uuid)
+        self._assertModuleExitMsg("Check {0} successfully paused".format(uuid), True)
+
+    def test_pause_whenNotFound(self, uuid):
+        self._setupHelper(status_code=HTTPStatus.NOT_FOUND)
+        self._runPauseTest(uuid)
+        self._assertModuleFail('Check {0} not found'.format(uuid))
+
+    def test_pause_whenOther(self, uuid):
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+        self._runPauseTest(uuid)
+        self._assertModuleFail('Failed delete check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
 
 
 class TestPing(ResourceTests):
