@@ -199,7 +199,7 @@ class SimpleResourceTests(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleFailJson:
             pass
 
@@ -216,7 +216,7 @@ class SimpleResourceTests(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleExitJson:
             pass
 
@@ -230,7 +230,7 @@ class SimpleResourceTests(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleExitJson:
             pass
 
@@ -257,7 +257,7 @@ class CheckSubResourceTests(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleFailJson:
             pass
 
@@ -276,7 +276,7 @@ class CheckSubResourceTests(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleExitJson:
             pass
 
@@ -290,7 +290,7 @@ class CheckSubResourceTests(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleExitJson:
             pass
 
@@ -355,7 +355,7 @@ class TestChecksInfo(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleFailJson:
             pass
 
@@ -386,7 +386,7 @@ class TestChecksInfo(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleExitJson:
             pass
 
@@ -400,7 +400,7 @@ class TestChecksInfo(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleExitJson:
             pass
 
@@ -417,7 +417,7 @@ class TestChecksInfo(ResourceTests):
 
         # Run
         try:
-            result = self._resource.get()
+            self._resource.get()
         except AnsibleFailJson:
             pass
 
@@ -515,7 +515,7 @@ class TestPing(ResourceTests):
 
         # Run
         try:
-            result = self._resource.create(uuid, signal)
+            self._resource.create(uuid, signal)
         except AnsibleExitJson:
             pass
 
@@ -530,7 +530,7 @@ class TestPing(ResourceTests):
 
         # Run
         try:
-            result = self._resource.create(uuid, signal)
+            self._resource.create(uuid, signal)
         except AnsibleFailJson:
             pass
 
@@ -544,7 +544,7 @@ class TestPing(ResourceTests):
 
         # Run
         try:
-            result = self._resource.create('test', 'success')
+            self._resource.create('test', 'success')
         except AnsibleExitJson:
             pass
 
