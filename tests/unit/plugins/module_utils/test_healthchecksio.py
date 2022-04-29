@@ -478,6 +478,21 @@ class TestCheck(ResourceTests):
         self._hcHelper.send.assert_not_called()
         self._assertModuleExit()
 
+    def test_create_whenOtherStatus(self):
+        # Setup
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+
+        # Run
+        try:
+            self._resource.create()
+        except (AnsibleExitJson, AnsibleFailJson):
+            pass
+
+        # Assertions
+        expected_url = 'checks/'
+        self._hcHelper.post.assert_called_once_with(expected_url, data={})
+        self._assertModuleFail('Failed to create or update check [HTTP {0}: (empty error message)]'.format(HTTPStatus.BAD_REQUEST))
+
     def _runDeleteTest(self, uuid):
         # Setup
         self._setupModule({

@@ -12,6 +12,14 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
 
 
+def delete_if_exists(dictionary, key):
+    '''
+    Deletes a key from a dictionary if it exists
+    '''
+    if key in dictionary.keys():
+        del dictionary[key]
+
+
 class Response(object):
     def __init__(self, resp, info):
         self.body = None
@@ -303,20 +311,21 @@ class Checks(object):
         request_params = dict(self.module.params)
 
         # uuid is not used to create or update, pop it
-        del request_params["uuid"]
+        delete_if_exists(request_params, "uuid")
 
         # if schedule and tz, create a Cron check
         if request_params.get("schedule") and request_params.get("tz"):
-            del request_params["grace"]
-            del request_params["timeout"]
+            delete_if_exists(request_params, "grace")
+            delete_if_exists(request_params, "timeout")
 
         # if timeout, create a Simple check
         if request_params.get("timeout"):
-            del request_params["schedule"]
-            del request_params["tz"]
+            delete_if_exists(request_params, "schedule")
+            delete_if_exists(request_params, "tz")
 
         tags = self.module.params.get("tags", [])
-        request_params["tags"] = " ".join(tags)
+        if tags:
+            request_params["tags"] = " ".join(tags)
 
         response = self.rest.post(endpoint, data=request_params)
         json_data = response.json
@@ -343,7 +352,7 @@ class Checks(object):
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed to create or update delete check [HTTP {0}: {1}]".format(
+                msg="Failed to create or update check [HTTP {0}: {1}]".format(
                     status_code, json_data.get("error", "(empty error message)")
                 ),
             )
