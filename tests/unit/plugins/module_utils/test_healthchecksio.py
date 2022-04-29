@@ -459,22 +459,9 @@ class TestCheck(ResourceTests):
         result = Checks.get_uuid(json_data)
         assert result == expected_result
 
-
-class TestCheck(ResourceTests):
-
-    @property
-    def resource_class(self):
-        return Checks
-
     @pytest.fixture(params=['create', 'delete', 'pause'])
     def method(self, request):
         return request.param
-
-    def _setupModule(self, module_params=None, check_mode=False):
-        super()._setupModule(module_params, check_mode)
-
-        if not self._module.params.get('api_token'):
-            self._module.params['api_token'] = 'test_token'
 
     def test_checkMode(self, method):
         # Setup
