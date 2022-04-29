@@ -491,6 +491,36 @@ class TestCheck(ResourceTests):
         self._hcHelper.send.assert_not_called()
         self._assertModuleExit()
 
+    def _runDeleteTest(self, uuid):
+        # Setup
+        self._setupModule({
+            'uuid': uuid
+        })
+
+        # Run
+        try:
+            self._resource.delete()
+        except (AnsibleExitJson, AnsibleFailJson):
+            pass
+
+        # Assertions
+        expected_url = 'checks/{0}'.format(uuid)
+        self._hcHelper.delete.assert_called_once_with(expected_url)
+
+    def test_delete_whenSuccess(self, uuid):
+        self._runDeleteTest(uuid)
+        self._assertModuleExitMsg("Check {0} successfully deleted".format(uuid), True)
+
+    def test_delete_whenNotFound(self, uuid):
+        self._setupHelper(status_code=HTTPStatus.NOT_FOUND)
+        self._runDeleteTest(uuid)
+        self._assertModuleExitMsg('Check {0} not found'.format(uuid))
+
+    def test_delete_whenOther(self, uuid):
+        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+        self._runDeleteTest(uuid)
+        self._assertModuleFail('Failed to delete check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
+
     def _runPauseTest(self, uuid):
         # Setup
         self._setupModule({

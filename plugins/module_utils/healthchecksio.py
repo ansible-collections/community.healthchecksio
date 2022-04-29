@@ -368,7 +368,7 @@ class Checks(object):
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
+                msg="Failed to delete check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
     def pause(self):
