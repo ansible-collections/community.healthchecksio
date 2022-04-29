@@ -389,7 +389,7 @@ class Checks(object):
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
+                msg="Failed to pause check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
 

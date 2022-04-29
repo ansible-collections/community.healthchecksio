@@ -519,7 +519,7 @@ class TestCheck(ResourceTests):
     def test_pause_whenOther(self, uuid):
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
         self._runPauseTest(uuid)
-        self._assertModuleFail('Failed delete check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
+        self._assertModuleFail('Failed to pause check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
 
 
 class TestPing(ResourceTests):
