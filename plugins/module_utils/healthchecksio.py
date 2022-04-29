@@ -348,8 +348,6 @@ class Checks(object):
                 ),
             )
 
-        self.module.exit_json(changed=True, data=json_data)
-
     def delete(self):
         if self.module.check_mode:
             self.module.exit_json(changed=False, data={})
