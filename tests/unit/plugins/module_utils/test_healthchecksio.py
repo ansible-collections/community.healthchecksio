@@ -46,8 +46,11 @@ class AnsibleFailJson(Exception):
 
 class TestHealthchecksioModuleUtil:
 
-    @pytest.fixture(params=['GET', 'POST', 'PUT', 'PATCH', 'HEAD', 'DELETE'])
-    def http_method(self, request):
+    @pytest.fixture(params=['get', 'post', 'put', 'delete'])
+    def standard_send_method(self, request):
+        '''
+        Names of methods on HealthchecksIoHelper implementing the standard send functionality
+        '''
         return request.param
 
     @pytest.fixture(params=['', '/', 'test', '/test', '/test/', '/test/test', '/test?test=test'])
@@ -76,7 +79,7 @@ class TestHealthchecksioModuleUtil:
         mock_response.return_value.json = data
         mock_response.return_value.status_code = status_code
 
-    def test_send(self, http_method, path, data, api_token, timeout, response_status_code):
+    def test_standard_send_methods(self, standard_send_method, path, data, api_token, timeout, response_status_code):
         module = MagicMock()
         module.params = {
             "api_token": api_token,
@@ -89,7 +92,8 @@ class TestHealthchecksioModuleUtil:
                 self._setup_response(mock_fetch, mock_response, data, response_status_code)
 
                 helper = HealthchecksioHelper(module)
-                response = helper.send(http_method, path, data)
+                call_method = getattr(helper, standard_send_method)
+                response = call_method(path, data)
 
                 assert response.status_code == response_status_code
                 assert response.json == data
@@ -100,7 +104,7 @@ class TestHealthchecksioModuleUtil:
                         path),
                     data='jsonified_data',
                     headers={'X-Api-Key':api_token},
-                    method=http_method,
+                    method=standard_send_method.upper(),
                     timeout=timeout)
                 module.jsonify.assert_called_with(data)
 

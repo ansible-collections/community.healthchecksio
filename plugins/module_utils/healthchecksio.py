@@ -56,7 +56,7 @@ class HealthchecksioHelper:
             path = path[1:]
         return "%s/%s" % (self.baseurl, path)
 
-    def send(self, method, path, data=None):
+    def _send(self, method, path, data=None):
         url = self._url_builder(path)
         data = self.module.jsonify(data)
 
@@ -76,16 +76,16 @@ class HealthchecksioHelper:
         return Response(resp, info)
 
     def get(self, path, data=None):
-        return self.send("GET", path, data)
+        return self._send("GET", path, data)
 
     def put(self, path, data=None):
-        return self.send("PUT", path, data)
+        return self._send("PUT", path, data)
 
     def post(self, path, data=None):
-        return self.send("POST", path, data)
+        return self._send("POST", path, data)
 
     def delete(self, path, data=None):
-        return self.send("DELETE", path, data)
+        return self._send("DELETE", path, data)
 
     def head(self, path, data=None):
         resp, info = fetch_url(
