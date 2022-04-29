@@ -6,6 +6,7 @@ import pytest
 from http import HTTPStatus
 from mock import patch, MagicMock
 
+from ansible_collections.community.healthchecksio.tests.unit.test_utils import AnsibleModuleTester
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
     BadgesInfo,
@@ -24,24 +25,6 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
 ])
 def uuid(request):
     return request.param
-
-
-class AnsibleExitJson(Exception):
-    """
-    Exception class to be raised by module.exit_json and caught by the test case
-
-    This prevents the method continuing when it would usually exit
-    """
-    pass
-
-
-class AnsibleFailJson(Exception):
-    """
-    Exception class to be raised by module.fail_json and caught by the test case
-
-    This prevents the method continuing when it would usually exit
-    """
-    pass
 
 
 class TestHealthchecksioModuleUtil:
@@ -139,25 +122,19 @@ class ResourceTests:
         raise NotImplementedError()
 
     def setup_method(self):
-        self._module = MagicMock()
-        self._module.fail_json.side_effect = AnsibleFailJson
-        self._module.exit_json.side_effect = AnsibleExitJson
-        self._setupModule()
+        self._moduleTester = AnsibleModuleTester()
+
+        # Setup initially with API token defined to prevent error from resource constructor.
+        self._moduleTester.setupModule({'api_token': 'test_token'})
 
         # Patch the helper to avoid an auth error
         with patch('ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.HealthchecksioHelper') as mockHelper:
             self._hcHelper = mockHelper
-            self._resource = self.resource_class(self._module)
+            self._resource = self.resource_class(self._moduleTester.mock_module)
             self._resource.rest = self._hcHelper
 
         self._hcHelper.reset_mock()
         self._setupHelper()
-
-    def _setupModule(self, module_params=None, check_mode=False):
-        module_params = module_params if module_params else {}
-
-        self._module.params = module_params
-        self._module.check_mode = check_mode
 
     def _setupHelper(self, response_json=None, status_code=HTTPStatus.OK):
         response_json = response_json if response_json else {}
@@ -165,20 +142,6 @@ class ResourceTests:
         for method in ['get', 'post', 'put', 'delete', 'head']:
             getattr(self._hcHelper, method).return_value.json = response_json
             getattr(self._hcHelper, method).return_value.status_code = status_code
-
-    def _assertModuleFail(self, expected_msg):
-        self._module.fail_json.assert_called_once_with(changed=False, msg=expected_msg)
-        self._module.exit_json.assert_not_called()
-
-    def _assertModuleExit(self, expected_data=None, expected_changed=False):
-        expected_data = expected_data if expected_data else {}
-
-        self._module.exit_json.assert_called_once_with(changed=expected_changed, data=expected_data)
-        self._module.fail_json.assert_not_called()
-
-    def _assertModuleExitMsg(self, expected_msg, expected_changed=False):
-        self._module.exit_json.assert_called_once_with(changed=expected_changed, msg=expected_msg)
-        self._module.fail_json.assert_not_called()
 
 
 class SimpleResourceTests(ResourceTests):
@@ -197,14 +160,13 @@ class SimpleResourceTests(ResourceTests):
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleFailJson:
-            pass
 
         # Assertions
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Failed to get {0} [HTTP 400: (empty error message)]'.format(self.expected_url))
         self._hcHelper.get.assert_called_with(self.expected_url)
-        self._assertModuleFail("Failed to get {0} [HTTP 400: (empty error message)]".format(self.expected_url))
 
     def test_get_whenSuccessful(self):
         # Setup
@@ -214,28 +176,25 @@ class SimpleResourceTests(ResourceTests):
         self._setupHelper(response_json)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_called_with(self.expected_url)
-        self._assertModuleExit(response_json)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(data=response_json)
 
     def test_get_whenCheckMode(self):
         # Setup
-        self._setupModule(check_mode=True)
+        self._moduleTester.setupModule(check_mode=True)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_not_called()
-        self._assertModuleExit()
+        assert self._moduleTester.isSuccess
 
 
 class CheckSubResourceTests(ResourceTests):
@@ -252,18 +211,17 @@ class CheckSubResourceTests(ResourceTests):
     def test_get_whenErrorStatus(self, uuid):
         # Setup
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
-        self._setupModule({'uuid': uuid})
+        self._moduleTester.setupModule({'uuid': uuid})
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleFailJson:
-            pass
 
         # Assertions
         expected_url = self._get_expected_url(uuid)
         self._hcHelper.get.assert_called_with(expected_url)
-        self._assertModuleFail("Failed to get {0} [HTTP 400: (empty error message)]".format(expected_url))
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg="Failed to get {0} [HTTP 400: (empty error message)]".format(expected_url))
 
     def test_get_whenSuccessful(self, uuid):
         # Setup
@@ -271,31 +229,28 @@ class CheckSubResourceTests(ResourceTests):
             'test': 'value'
         }
         self._setupHelper(response_json)
-        self._setupModule({'uuid': uuid})
+        self._moduleTester.setupModule({'uuid': uuid})
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_called_with(self._get_expected_url(uuid))
-        self._assertModuleExit(response_json)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(data=response_json)
 
     def test_get_whenCheckMode(self):
         # Setup
-        self._setupModule(check_mode=True)
+        self._moduleTester.setupModule(check_mode=True)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_not_called()
-        self._assertModuleExit()
+        assert self._moduleTester.isSuccess
 
 
 class TestBadgesInfo(SimpleResourceTests):
@@ -353,14 +308,13 @@ class TestChecksInfo(ResourceTests):
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleFailJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_called_with('checks')
-        self._assertModuleFail("Failed to get checks [HTTP 400]")
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg="Failed to get checks [HTTP 400]")
 
     @pytest.mark.parametrize(
         "tags,uuid,expected_url",
@@ -373,7 +327,7 @@ class TestChecksInfo(ResourceTests):
     )
     def test_get_whenSuccessful(self, tags, uuid, expected_url):
         # Setup
-        self._setupModule({
+        self._moduleTester.setupModule({
             'tags': tags,
             'uuid': uuid
         })
@@ -384,45 +338,41 @@ class TestChecksInfo(ResourceTests):
         self._setupHelper(response_json)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_called_with(expected_url)
-        self._assertModuleExit(response_json)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(data=response_json)
 
     def test_get_whenCheckMode(self):
         # Setup
-        self._setupModule(check_mode=True)
+        self._moduleTester.setupModule(check_mode=True)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_not_called()
-        self._assertModuleExit()
+        assert self._moduleTester.isSuccess
 
     def test_get_whenTagsAndUuidPresent(self):
         # Setup
-        self._setupModule({
+        self._moduleTester.setupModule({
             'tags': ['a'],
             'uuid': '12345'
         })
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.get()
-        except AnsibleFailJson:
-            pass
 
         # Assertions
         self._hcHelper.get.assert_not_called()
-        self._assertModuleFail("tags and uuid arguments are mutually exclusive and cannot both be provided.")
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg="tags and uuid arguments are mutually exclusive and cannot both be provided.")
 
 
 class TestCheck(ResourceTests):
@@ -430,12 +380,6 @@ class TestCheck(ResourceTests):
     @property
     def resource_class(self):
         return Checks
-
-    def _setupModule(self, module_params=None, check_mode=False):
-        super()._setupModule(module_params, check_mode)
-
-        if not self._module.params.get('api_token'):
-            self._module.params['api_token'] = 'test_token'
 
     @pytest.mark.parametrize(
         "ping_url,expected_result",
@@ -465,45 +409,38 @@ class TestCheck(ResourceTests):
 
     def test_checkMode(self, method):
         # Setup
-        self._setupModule(check_mode=True)
+        self._moduleTester.setupModule(check_mode=True)
 
         # Run
-        try:
+        with self._moduleTester.run():
             call_method = getattr(self._resource, method)
             call_method()
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.send.assert_not_called()
-        self._assertModuleExit()
+        assert self._moduleTester.isSuccess
 
     def test_create_whenOtherStatus(self):
         # Setup
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.create()
-        except (AnsibleExitJson, AnsibleFailJson):
-            pass
 
         # Assertions
         expected_url = 'checks/'
         self._hcHelper.post.assert_called_once_with(expected_url, data={})
-        self._assertModuleFail('Failed to create or update check [HTTP {0}: (empty error message)]'.format(HTTPStatus.BAD_REQUEST))
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Failed to create or update check [HTTP {0}: (empty error message)]'.format(HTTPStatus.BAD_REQUEST))
 
     def _runDeleteTest(self, uuid):
         # Setup
-        self._setupModule({
-            'uuid': uuid
-        })
+        self._moduleTester.setupModule({'uuid': uuid})
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.delete()
-        except (AnsibleExitJson, AnsibleFailJson):
-            pass
 
         # Assertions
         expected_url = 'checks/{0}'.format(uuid)
@@ -511,29 +448,32 @@ class TestCheck(ResourceTests):
 
     def test_delete_whenSuccess(self, uuid):
         self._runDeleteTest(uuid)
-        self._assertModuleExitMsg("Check {0} successfully deleted".format(uuid), True)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(
+            msg="Check {0} successfully deleted".format(uuid),
+            changed=True)
 
     def test_delete_whenNotFound(self, uuid):
         self._setupHelper(status_code=HTTPStatus.NOT_FOUND)
         self._runDeleteTest(uuid)
-        self._assertModuleExitMsg('Check {0} not found'.format(uuid))
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Check {0} not found'.format(uuid))
 
     def test_delete_whenOther(self, uuid):
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
         self._runDeleteTest(uuid)
-        self._assertModuleFail('Failed to delete check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Failed to delete check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
 
     def _runPauseTest(self, uuid):
         # Setup
-        self._setupModule({
+        self._moduleTester.setupModule({
             'uuid': uuid
         })
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.pause()
-        except (AnsibleExitJson, AnsibleFailJson):
-            pass
 
         # Assertions
         expected_url = 'checks/{0}/pause'.format(uuid)
@@ -541,17 +481,22 @@ class TestCheck(ResourceTests):
 
     def test_pause_whenSuccess(self, uuid):
         self._runPauseTest(uuid)
-        self._assertModuleExitMsg("Check {0} successfully paused".format(uuid), True)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(
+            msg="Check {0} successfully paused".format(uuid),
+            changed=True)
 
     def test_pause_whenNotFound(self, uuid):
         self._setupHelper(status_code=HTTPStatus.NOT_FOUND)
         self._runPauseTest(uuid)
-        self._assertModuleFail('Check {0} not found'.format(uuid))
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Check {0} not found'.format(uuid))
 
     def test_pause_whenOther(self, uuid):
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
         self._runPauseTest(uuid)
-        self._assertModuleFail('Failed to pause check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Failed to pause check {0} [HTTP {1}]'.format(uuid, HTTPStatus.BAD_REQUEST))
 
 
 class TestPing(ResourceTests):
@@ -564,25 +509,20 @@ class TestPing(ResourceTests):
     def signal(self, request):
         return request.param
 
-    def _setupModule(self, module_params=None, check_mode=False):
-        super()._setupModule(module_params, check_mode)
-
-        if not self._module.params.get('api_token'):
-            self._module.params['api_token'] = 'test_token'
-
     def test_create_whenSuccess(self, uuid, signal):
         # Setup
         expected_url = uuid if signal == 'success' else "{0}/{1}".format(uuid, signal)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.create(uuid, signal)
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.head.assert_called_with(expected_url)
-        self._assertModuleExitMsg('Sent {0} signal to {1}'.format(signal, expected_url), expected_changed=True)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(
+            msg='Sent {0} signal to {1}'.format(signal, expected_url),
+            changed=True)
 
     def test_create_whenErrorStatus(self, uuid, signal):
         # Setup
@@ -590,25 +530,22 @@ class TestPing(ResourceTests):
         self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.create(uuid, signal)
-        except AnsibleFailJson:
-            pass
 
         # Assertions
         self._hcHelper.head.assert_called_with(expected_url)
-        self._assertModuleFail('Failed to send {0} signal to {1} [HTTP 400]'.format(signal, expected_url))
+        assert not self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(msg='Failed to send {0} signal to {1} [HTTP 400]'.format(signal, expected_url))
 
     def test_create_whenCheckMode(self):
         # Setup
-        self._setupModule(check_mode=True)
+        self._moduleTester.setupModule(check_mode=True)
 
         # Run
-        try:
+        with self._moduleTester.run():
             self._resource.create('test', 'success')
-        except AnsibleExitJson:
-            pass
 
         # Assertions
         self._hcHelper.head.assert_not_called()
-        self._assertModuleExit()
+        assert self._moduleTester.isSuccess
