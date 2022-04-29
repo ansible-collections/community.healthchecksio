@@ -57,6 +57,7 @@
         {
             "label": "Run unit tests",
             "type": "shell",
+            "dependsOn": "Coverage: Erase",
             "command": "ansible-test",
             "args": [
                 "units",
@@ -64,7 +65,8 @@
                 "default",
                 "--python",
                 "3.9",
-                "-v"
+                "-v",
+                "--coverage",
             ],
             "group": "test",
             "presentation": {
@@ -75,7 +77,62 @@
                 "showReuseMessage": true,
                 "clear": true
             },
-            "problemMatcher": {}
+        },
+        {
+            "label": "Coverage: Erase",
+            "type": "shell",
+            "command": "ansible-test",
+            "args":[
+                "coverage",
+                "erase"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Coverage: Combine",
+            "type": "shell",
+            "command": "ansible-test",
+            "dependsOn": "Run unit tests",
+            "args":[
+                "coverage",
+                "combine"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Coverage: Generate HTML",
+            "type": "shell",
+            "command": "ansible-test",
+            "dependsOn": "Coverage: Combine",
+            "args":[
+                "coverage",
+                "html"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
         },
     ]
 }
