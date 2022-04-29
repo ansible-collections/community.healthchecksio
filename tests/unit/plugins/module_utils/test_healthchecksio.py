@@ -427,6 +427,10 @@ class TestCheck(ResourceTests):
         result = Checks.get_uuid(json_data)
         assert result == expected_result
 
+    @staticmethod
+    def _build_ping_url(uuid):
+        return 'https://hc-ping.com/{0}'.format(uuid)
+
     @pytest.fixture(params=['create', 'delete', 'pause'])
     def method(self, request):
         return request.param
@@ -444,9 +448,13 @@ class TestCheck(ResourceTests):
         self._hcHelper.send.assert_not_called()
         assert self._moduleTester.isSuccess
 
-    def test_create_whenOtherStatus(self):
+    def _runCreateTest(self, status_code, uuid):
         # Setup
-        self._setupHelper(status_code=HTTPStatus.BAD_REQUEST)
+        self._setupHelper(
+            status_code=status_code,
+            response_json = {
+                'ping_url': self._build_ping_url(uuid)
+            })
 
         # Run
         with self._moduleTester.run():
@@ -455,6 +463,31 @@ class TestCheck(ResourceTests):
         # Assertions
         expected_url = 'checks/'
         self._hcHelper.post.assert_called_once_with(expected_url, data={})
+
+    def test_create_whenCreated(self, uuid):
+        self._runCreateTest(HTTPStatus.CREATED, uuid)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(
+            changed=True,
+            msg='New check {0} created'.format(uuid),
+            data={
+                'ping_url': self._build_ping_url(uuid)
+            },
+            uuid=uuid)
+
+    def test_create_whenUpdated(self, uuid):
+        self._runCreateTest(HTTPStatus.OK, uuid)
+        assert self._moduleTester.isSuccess
+        self._moduleTester.assertOutput(
+            changed=True,
+            msg='Existing check {0} found and updated'.format(uuid),
+            data={
+                'ping_url': self._build_ping_url(uuid)
+            },
+            uuid=uuid)
+
+    def test_create_whenOtherStatus(self, uuid):
+        self._runCreateTest(HTTPStatus.BAD_REQUEST, uuid)
         assert not self._moduleTester.isSuccess
         self._moduleTester.assertOutput(msg='Failed to create or update check [HTTP {0}: (empty error message)]'.format(HTTPStatus.BAD_REQUEST))
 
