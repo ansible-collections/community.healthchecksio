@@ -1,0 +1,2 @@
+bugfixes:
+  - checks - restore C(grace) parameter to Cron checks (https://github.com/ansible-collections/community.healthchecksio/issues/24).
