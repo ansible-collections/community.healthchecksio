@@ -315,7 +315,6 @@ class Checks(object):
 
         # if schedule and tz, create a Cron check
         if request_params.get("schedule") and request_params.get("tz"):
-            delete_if_exists(request_params, "grace")
             delete_if_exists(request_params, "timeout")
 
         # if timeout, create a Simple check

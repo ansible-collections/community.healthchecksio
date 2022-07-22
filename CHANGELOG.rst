@@ -5,6 +5,21 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v1.2.0
+======
+
+Restoring the C(grace) parameter to Cron checks and adding Ansible 2.13 to sanity and unit testing.
+
+Minor Changes
+-------------
+
+- ci - adding stable-2.13 to sanity and unit testing (https://github.com/ansible-collections/community.healthchecksio/issues/22).
+
+Bugfixes
+--------
+
+- checks - restore C(grace) parameter to Cron checks (https://github.com/ansible-collections/community.healthchecksio/issues/24).
+
 v1.1.1
 ======
 

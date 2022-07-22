@@ -48,3 +48,14 @@ releases:
     - 16-create-simple-checks.yaml
     - 19-remove-default-uuid.yaml
     release_date: '2022-04-06'
+  1.2.0:
+    changes:
+      release_summary: Restoring the C(grace) parameter to Cron checks and adding Ansible 2.13 to sanity and unit testing.
+      bugfixes:
+      - checks - restore C(grace) parameter to Cron checks (https://github.com/ansible-collections/community.healthchecksio/issues/24).
+      minor_changes:
+      - ci - adding stable-2.13 to sanity and unit testing (https://github.com/ansible-collections/community.healthchecksio/issues/22).
+    fragments:
+    - 22-ci-sanity-2.13.yaml
+    - 24-grace.yaml
+    release_date: '2022-05-19'
