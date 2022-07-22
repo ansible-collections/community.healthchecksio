@@ -12,6 +12,14 @@ from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
 
 
+def delete_if_exists(dictionary, key):
+    '''
+    Deletes a key from a dictionary if it exists
+    '''
+    if key in dictionary.keys():
+        del dictionary[key]
+
+
 class Response(object):
     def __init__(self, resp, info):
         self.body = None
@@ -26,7 +34,7 @@ class Response(object):
                 try:
                     json_body = json.loads(to_text(self.info["body"]))
                     return json_body
-                except json.decoder.JSONDecodeError:
+                except (ValueError, json.decoder.JSONDecodeError):
                     return {}
             return None
         try:
@@ -52,11 +60,11 @@ class HealthchecksioHelper:
             self.module.fail_json(msg="Failed to login using API token")
 
     def _url_builder(self, path):
-        if path[0] == "/":
+        if path and path[0] == "/":
             path = path[1:]
         return "%s/%s" % (self.baseurl, path)
 
-    def send(self, method, path, data=None):
+    def _send(self, method, path, data=None):
         url = self._url_builder(path)
         data = self.module.jsonify(data)
 
@@ -76,16 +84,16 @@ class HealthchecksioHelper:
         return Response(resp, info)
 
     def get(self, path, data=None):
-        return self.send("GET", path, data)
+        return self._send("GET", path, data)
 
     def put(self, path, data=None):
-        return self.send("PUT", path, data)
+        return self._send("PUT", path, data)
 
     def post(self, path, data=None):
-        return self.send("POST", path, data)
+        return self._send("POST", path, data)
 
     def delete(self, path, data=None):
-        return self.send("DELETE", path, data)
+        return self._send("DELETE", path, data)
 
     def head(self, path, data=None):
         resp, info = fetch_url(
@@ -195,7 +203,11 @@ class ChecksFlipsInfo(object):
         if status_code != 200:
             self.module.fail_json(
                 changed=False,
-                msg="Failed to get {0} [HTTP {1}]".format(endpoint, status_code),
+                msg="Failed to get {0} [HTTP {1}: {2}]".format(
+                    endpoint,
+                    status_code,
+                    json_data.get("message", "(empty error message)")
+                )
             )
 
         self.module.exit_json(changed=False, data=json_data)
@@ -213,13 +225,20 @@ class ChecksInfo(object):
         endpoint = "checks"
 
         tags = self.module.params.get("tags", None)
+        uuid = self.module.params.get("uuid", None)
+
+        if uuid is not None and tags is not None:
+            self.module.fail_json(
+                changed=False,
+                msg="tags and uuid arguments are mutually exclusive and cannot both be provided.",
+            )
+
         if tags is not None:
             tags = ["tag=" + tag for tag in tags]
             tags = "&".join(tags)
             if tags:
                 endpoint += "?" + tags
 
-        uuid = self.module.params.get("uuid", None)
         if uuid is not None:
             endpoint += "/" + uuid
 
@@ -271,10 +290,11 @@ class Checks(object):
         self.rest = HealthchecksioHelper(module)
         self.api_token = module.params.pop("api_token")
 
-    def get_uuid(self, json_data):
+    @staticmethod
+    def get_uuid(json_data):
         ping_url = json_data.get("ping_url", None)
         if ping_url is not None:
-            uuid = ping_url.split("/")[3]
+            uuid = ping_url.split("/")[-1]
             if len(uuid) > 0:
                 return uuid
             else:
@@ -291,19 +311,20 @@ class Checks(object):
         request_params = dict(self.module.params)
 
         # uuid is not used to create or update, pop it
-        del request_params["uuid"]
+        delete_if_exists(request_params, "uuid")
 
         # if schedule and tz, create a Cron check
         if request_params.get("schedule") and request_params.get("tz"):
-            del request_params["timeout"]
+            delete_if_exists(request_params, "timeout")
 
         # if timeout, create a Simple check
         if request_params.get("timeout"):
-            del request_params["schedule"]
-            del request_params["tz"]
+            delete_if_exists(request_params, "schedule")
+            delete_if_exists(request_params, "tz")
 
         tags = self.module.params.get("tags", [])
-        request_params["tags"] = " ".join(tags)
+        if tags:
+            request_params["tags"] = " ".join(tags)
 
         response = self.rest.post(endpoint, data=request_params)
         json_data = response.json
@@ -330,12 +351,10 @@ class Checks(object):
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed to create or update delete check [HTTP {0}: {1}]".format(
+                msg="Failed to create or update check [HTTP {0}: {1}]".format(
                     status_code, json_data.get("error", "(empty error message)")
                 ),
             )
-
-        self.module.exit_json(changed=True, data=json_data)
 
     def delete(self):
         if self.module.check_mode:
@@ -355,7 +374,7 @@ class Checks(object):
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
+                msg="Failed to delete check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
     def pause(self):
@@ -372,11 +391,11 @@ class Checks(object):
                 changed=True, msg="Check {0} successfully paused".format(uuid)
             )
         elif status_code == 404:
-            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
+            self.module.fail_json(changed=False, msg="Check {0} not found".format(uuid))
         else:
             self.module.fail_json(
                 changed=False,
-                msg="Failed delete check {0} [HTTP {1}]".format(uuid, status_code),
+                msg="Failed to pause check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
 
