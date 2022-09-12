@@ -10,6 +10,7 @@ import json
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
+from urllib.parse import urljoin
 
 
 class Response(object):
@@ -42,7 +43,12 @@ class Response(object):
 class HealthchecksioHelper:
     def __init__(self, module):
         self.module = module
-        self.baseurl = "https://healthchecks.io/api/v1"
+        api_base_url = module.params.get("api_base_url")
+        if api_base_url == self.healthchecksio_argument_spec().get("api_base_url").get("default"):
+            self.ping_api_base_url = "https://hc-ping.com"
+        else:
+            self.ping_api_base_url = urljoin(api_base_url, "/ping")
+        self.baseurl = urljoin(api_base_url, "/api/v1")
         self.timeout = module.params.get("timeout", 30)
         self.api_token = module.params.get("api_token")
         self.headers = {"X-Api-Key": self.api_token}
@@ -90,7 +96,7 @@ class HealthchecksioHelper:
     def head(self, path, data=None):
         resp, info = fetch_url(
             self.module,
-            "https://hc-ping.com/{0}".format(path),
+            "{0}/{1}".format(self.ping_api_base_url, path),
             data=data,
             headers=self.headers,
             method="HEAD",
@@ -116,6 +122,19 @@ class HealthchecksioHelper:
                 ),
                 required=True,
                 no_log=True,
+            ),
+            api_base_url=dict(
+                type="str",
+                fallback=(
+                    env_fallback,
+                    [
+                        "HEALTHCHECKSIO_API_BASE_URL",
+                        "HC_API_BASE_URL"
+                    ],
+                ),
+                required=False,
+                no_log=True,
+                default="https://healthchecks.io"
             ),
         )
 
