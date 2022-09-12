@@ -293,7 +293,7 @@ class Checks(object):
     def get_uuid(self, json_data):
         ping_url = json_data.get("ping_url", None)
         if ping_url is not None:
-            uuid = ping_url.split("/")[3]
+            uuid = ping_url.split("/")[-1]
             if len(uuid) > 0:
                 return uuid
             else:
