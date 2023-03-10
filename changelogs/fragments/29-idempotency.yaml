@@ -1,2 +1,0 @@
-minor_changes:
-  - checks - implement idempotency when unique param is used (https://github.com/ansible-collections/community.healthchecksio/issues/28)
