@@ -305,6 +305,41 @@ class Checks(object):
         tags = self.module.params.get("tags", [])
         request_params["tags"] = " ".join(tags)
 
+        checks = self.rest.get("checks").json["checks"]
+        unique = request_params["unique"]
+        c = [
+            check
+            for check in checks
+            if all(check[k] == request_params[k] for k in unique)
+        ]
+
+        if len(c) > 1 and len(unique) != 0:
+            self.module.fail_json(
+                changed=False,
+                msg=f"Expected to find one check matching unique parameters, {len(c)} found",
+            )
+
+        # Extract all available channels if "*" is given
+        if request_params["channels"] == "*":
+            channels = self.rest.get("channels").json.get("channels")
+            channels = [channel["id"] for channel in channels]
+            channels = ",".join(channels)
+        else:
+            channels = request_params["channels"]
+
+        # If all request parameters (except unique and api_key) match, exit without changes
+        skip_idempotency_params = ["unique", "api_key", "channels"]
+        if (
+            len(c) == 1
+            and all(
+                c[0][k] == request_params[k]
+                for k in request_params
+                if k not in skip_idempotency_params
+            )
+            and c[0]["channels"] == channels
+        ):
+            self.module.exit_json(changed=False, data=c[0], uuid=self.get_uuid(c[0]))
+
         response = self.rest.post(endpoint, data=request_params)
         json_data = response.json
         status_code = response.status_code
