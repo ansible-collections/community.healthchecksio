@@ -11,12 +11,24 @@
     - name: Create a Cron check named "cron test"
       community.healthchecksio.checks:
         state: present
+        channels: "*"  # also test idempotency for channels
         api_key: "{{ api_key }}"
         name: cron test
         unique: ["name"]
         schedule: 7 7 * * *
         tz: UTC
       register: result
+
+    - name: Create a Cron check named "cron test" - test idempotency
+      community.healthchecksio.checks:
+        state: present
+        channels: "*"  # also test idempotency for channels
+        api_key: "{{ api_key }}"
+        name: cron test
+        unique: ["name"]
+        schedule: 7 7 * * *
+        tz: UTC
+      register: result_idempotency
 
     - name: Verify integrations
       ansible.builtin.assert:
@@ -26,6 +38,7 @@
           - result.data.name is defined
           - result.data.name == "cron test"
           - result.uuid is defined
+          - result_idempotency.changed == false
 
     - name: Set a fact for the check
       ansible.builtin.set_fact:
