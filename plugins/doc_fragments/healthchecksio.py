@@ -18,4 +18,11 @@ options:
       - C(HEALTHCHECKSIO_API_TOKEN), C(HEALTHCHECKSIO_API_KEY), C(HC_API_TOKEN), C(HC_API_KEY)
     type: str
     required: true
+  api_url:
+    description:
+      - Healthchecks.io API url, if using a self hosted instance.
+      - "There are several environment variables which can be used to provide this value:"
+      - C(HEALTHCHECKSIO_API_URL), C(HC_API_URL)
+    type: str
+    required: false
 """
