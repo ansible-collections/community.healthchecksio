@@ -4,11 +4,6 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
-### [Unreleased]
-
-### Added
-
-- Support for using a private instance of Healthchecks.io
 
 v1.2.0
 ======
