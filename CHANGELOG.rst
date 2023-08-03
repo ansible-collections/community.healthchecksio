@@ -5,6 +5,14 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v1.3.1
+======
+
+Bugfixes
+--------
+
+- checks - channel comparison result was order dependent. Fix now compares channels lists as sets (https://github.com/ansible-collections/community.healthchecksio/pull/35).
+
 v1.3.0
 ======
 
