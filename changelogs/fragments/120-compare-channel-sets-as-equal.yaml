@@ -1,2 +1,0 @@
-bugfixes:
-  - checks - channel comparison result was order dependent. Fix now compares channels lists as sets (https://github.com/ansible-collections/community.healthchecksio/pull/35).
