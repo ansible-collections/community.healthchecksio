@@ -336,7 +336,7 @@ class Checks(object):
                 for k in request_params
                 if k not in skip_idempotency_params
             )
-            and c[0]["channels"] == channels
+            and sorted(c[0]["channels"].split(",")) == sorted(channels.split(","))
         ):
             self.module.exit_json(changed=False, data=c[0], uuid=self.get_uuid(c[0]))
 
