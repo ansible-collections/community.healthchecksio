@@ -44,7 +44,9 @@ class HealthchecksioHelper:
     def __init__(self, module):
         self.module = module
         api_base_url = module.params.get("api_base_url")
-        if api_base_url == self.healthchecksio_argument_spec().get("api_base_url").get("default"):
+        if api_base_url == self.healthchecksio_argument_spec().get("api_base_url").get(
+            "default"
+        ):
             self.ping_api_base_url = "https://hc-ping.com"
         else:
             self.ping_api_base_url = urljoin(api_base_url, "/ping")
@@ -127,14 +129,11 @@ class HealthchecksioHelper:
                 type="str",
                 fallback=(
                     env_fallback,
-                    [
-                        "HEALTHCHECKSIO_API_BASE_URL",
-                        "HC_API_BASE_URL"
-                    ],
+                    ["HEALTHCHECKSIO_API_BASE_URL", "HC_API_BASE_URL"],
                 ),
                 required=False,
                 no_log=True,
-                default="https://healthchecks.io"
+                default="https://healthchecks.io",
             ),
         )
 
@@ -347,7 +346,7 @@ class Checks(object):
             channels = request_params["channels"]
 
         # If all request parameters (except unique and api_key) match, exit without changes
-        skip_idempotency_params = ["unique", "api_key", "channels"]
+        skip_idempotency_params = ["unique", "api_key", "api_base_url", "channels"]
         if (
             len(c) == 1
             and all(
