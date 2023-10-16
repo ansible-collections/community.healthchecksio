@@ -210,9 +210,8 @@ N/A
     signal: start
 ```
 
-### Using a Private Instance of Healthchecks.io
-
-The `api_base_url` variable allows you to specify the custom API URL of your healthchecks.io instance, which can be used to connect to your private instance.
+### Using a self-hosted instance of Healthchecks.io
+The `api_base_url` parameter can be used to direct the modules in this Collection towards a self-hosted instance of Healthchecks.io. By default, or if unset, it defaults to the public instance located at hc-ping.com.
 
 Example Ansible configuration using the `api_base_url` variable:
 

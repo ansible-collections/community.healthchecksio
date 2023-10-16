@@ -1,2 +1,2 @@
 minor_changes:
-  - Support for using a private instance of Healthchecks.io (https://github.com/ansible-collections/community.healthchecksio/pull/37).
+  - Add support for using self-hosted instances of Healthchecks.io (https://github.com/ansible-collections/community.healthchecksio/pull/37).

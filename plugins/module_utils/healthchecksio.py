@@ -133,7 +133,7 @@ class HealthchecksioHelper:
                 ),
                 required=False,
                 no_log=True,
-                default="https://healthchecks.io",
+                default="https://hc-ping.com",
             ),
         )
 
