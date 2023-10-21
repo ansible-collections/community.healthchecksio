@@ -25,7 +25,7 @@ jobs:
           path: healthchecks
 
       - name: Deploy
-        working-directory: docker
+        working-directory: healthchecks/docker
         env:
           DB_NAME: healthchecks
           DB_PASSWORD: healthchecks
