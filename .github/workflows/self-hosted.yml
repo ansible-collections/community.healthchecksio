@@ -15,8 +15,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          path: thisrepo
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
           repository: healthchecks/healthchecks
           ref: v3.0
+          path: healthchecks
 
       - name: Deploy
         working-directory: docker
@@ -24,4 +30,5 @@ jobs:
           DB_NAME: healthchecks
           DB_PASSWORD: healthchecks
         run: |
+          cp ../thisrepo/docker/.env .env
           docker-compose up
