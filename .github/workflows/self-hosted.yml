@@ -27,9 +27,6 @@ jobs:
 
       - name: Deploy
         working-directory: healthchecks/docker
-        env:
-          DB_NAME: healthchecks
-          DB_PASSWORD: healthchecks
         run: |
           cp ../../thisrepo/docker/self-hosted.env .env
           docker-compose up
