@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/healthchecks/healthchecks.git
+          repository: healthchecks/healthchecks
           ref: v3.0
 
       - name: Deploy
