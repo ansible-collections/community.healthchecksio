@@ -1,0 +1,24 @@
+name: self-hosted
+
+on:
+  push:
+    branches: [self-hosted]
+
+concurrency:
+  group: "${{ github.workflow }}"
+  cancel-in-progress: true
+
+jobs:
+  self-hosted:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: https://github.com/healthchecks/healthchecks.git
+          ref: v3.0
+
+      - name: Deploy
+        working-directory: docker
+        run: |
+          docker-compose up
