@@ -20,5 +20,8 @@ jobs:
 
       - name: Deploy
         working-directory: docker
+        env:
+          DB_NAME: healthchecks
+          DB_PASSWORD: healthchecks
         run: |
           docker-compose up
