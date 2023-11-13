@@ -1,2 +1,0 @@
-trivial:
-  - ci - Fix integration test concurrency (https://github.com/ansible-collections/community.healthchecksio/pull/38).
