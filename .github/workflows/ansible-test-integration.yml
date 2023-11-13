@@ -10,8 +10,8 @@ on:
     - cron: '10 6 * * *'
 
 concurrency:
-  group: cloud-integration-tests
-  cancel-in-progress: false
+  group: "${{ github.workflow }}"
+  cancel-in-progress: true
 
 jobs:
 
