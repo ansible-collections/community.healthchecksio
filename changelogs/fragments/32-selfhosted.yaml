@@ -1,0 +1,2 @@
+minor_changes:
+  - base_url - Support for using a private instance of Healthchecks.io (https://github.com/ansible-collections/community.healthchecksio/pull/32).

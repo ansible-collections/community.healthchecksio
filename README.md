@@ -210,6 +210,22 @@ N/A
     signal: start
 ```
 
+### Using a Private Instance of Healthchecks.io
+
+The `api_base_url` variable allows you to specify the custom API URL of your healthchecks.io instance, which can be used to connect to your private instance.
+
+Example Ansible configuration using the `api_base_url` variable:
+
+```yaml
+- name: Create a check named "test"
+  community.healthchecksio.checks:
+    state: present
+    api_base_url: {{ api_base_url }}
+    api_key: "{{ api_key }}"
+    name: test
+    unique: ["name"]
+```
+
 ### Installing the Collection from Ansible Galaxy
 
 Before using this collection, you need to install it with the Ansible Galaxy command-line tool:
