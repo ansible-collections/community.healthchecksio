@@ -60,7 +60,7 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Check {{ uuid }} successfully deleted'"
+          - result.msg == "Check " ~ uuid ~ " successfully deleted"
 
     - name: Create a Simple check named "simple test"
       community.healthchecksio.checks:
@@ -100,7 +100,7 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Check {{ uuid }} successfully deleted'"
+          - result.msg == "Check " ~ uuid ~ " successfully deleted"
 
     - name: Create an invalid check (mutally exclusive)
       community.healthchecksio.checks:
@@ -161,7 +161,7 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Check {{ uuid }} successfully deleted'"
+          - result.msg == "Check " ~ uuid ~ " successfully deleted"
 
     - name: Create a Simple check named "simple test"
       community.healthchecksio.checks:
@@ -201,4 +201,4 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Check {{ uuid }} successfully deleted'"
+          - result.msg == "Check " ~ uuid ~ " successfully deleted"
