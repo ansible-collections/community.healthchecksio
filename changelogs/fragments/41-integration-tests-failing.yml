@@ -1,0 +1,2 @@
+trivial:
+  - ci - Switch to jinja tilde operator (https://github.com/ansible-collections/community.healthchecksio/issues/41).
