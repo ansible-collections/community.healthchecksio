@@ -5,8 +5,32 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v1.3.1
+======
+
+Bugfixes
+--------
+
+- checks - channel comparison result was order dependent. Fix now compares channels lists as sets (https://github.com/ansible-collections/community.healthchecksio/pull/35).
+
+v1.3.0
+======
+
+Release Summary
+---------------
+
+Implement idempotency when unique param is used in checks.
+
+Minor Changes
+-------------
+
+- checks - implement idempotency when unique param is used (https://github.com/ansible-collections/community.healthchecksio/issues/28)
+
 v1.2.0
 ======
+
+Release Summary
+---------------
 
 Restoring the C(grace) parameter to Cron checks and adding Ansible 2.13 to sanity and unit testing.
 
