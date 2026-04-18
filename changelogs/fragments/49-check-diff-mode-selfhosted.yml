@@ -1,0 +1,4 @@
+minor_changes:
+  - healthchecksio.checks - Full check_mode support (delete/pause report would-be changes, create is idempotent in check mode).
+  - healthchecksio.checks - Add diff_mode support (returns before/after state on create/update).
+  - healthchecksio.checks - Fix idempotency comparison to include tags field.
