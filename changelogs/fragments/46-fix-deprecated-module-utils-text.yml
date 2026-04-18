@@ -1,0 +1,2 @@
+bugfixes:
+  - community.healthchecksio.checks - Replace deprecated ``ansible.module_utils._text`` import with ``ansible.module_utils.common.text.converters`` (https://github.com/ansible-collections/community.healthchecksio/pull/46).
