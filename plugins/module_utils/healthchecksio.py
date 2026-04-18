@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
+from urllib.parse import quote
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils.common.text.converters import to_text
 from ansible.module_utils.basic import env_fallback
@@ -299,7 +300,7 @@ class ChecksInfo(object):
         name = self.module.params.get("name", None)
         if name is not None:
             separator = "&" if "?" in endpoint else "?"
-            endpoint += separator + "name=" + name
+            endpoint += separator + "name=" + quote(name, safe="")
 
         response = self.rest.get(endpoint)
         json_data = response.json
