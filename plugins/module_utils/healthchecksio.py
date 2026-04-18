@@ -370,7 +370,9 @@ class Checks(object):
         if len(c) > 1 and len(unique) != 0:
             self.module.fail_json(
                 changed=False,
-                msg="Expected to find one check matching unique parameters, {0} found".format(len(c)),
+                msg="Expected to find one check matching unique parameters, {0} found".format(
+                    len(c)
+                ),
             )
 
         # Resolve "*" channels to actual channel IDs
@@ -390,7 +392,9 @@ class Checks(object):
                 for k in request_params
                 if k not in skip
             )
-            channels_match = sorted(c[0].get("channels", "").split(",")) == sorted(channels_str.split(","))
+            channels_match = sorted(c[0].get("channels", "").split(",")) == sorted(
+                channels_str.split(",")
+            )
             tags_match = c[0].get("tags", "") == tags_str
             if params_match and channels_match and tags_match:
                 return c[0]
@@ -445,7 +449,9 @@ class Checks(object):
                 channels_str = channels_param
 
             before = existing
-            channels_match = sorted(before.get("channels", "").split(",")) == sorted(channels_str.split(","))
+            channels_match = sorted(before.get("channels", "").split(",")) == sorted(
+                channels_str.split(",")
+            )
             skip_idempotency_params = [
                 "unique",
                 "api_key",
@@ -465,7 +471,9 @@ class Checks(object):
             )
             tags_match = before.get("tags", "") == request_params.get("tags")
             if params_match and channels_match and tags_match:
-                diff = dict(before=before, after=before) if self.module.diff_mode else None
+                diff = (
+                    dict(before=before, after=before) if self.module.diff_mode else None
+                )
                 self.module.exit_json(
                     changed=False,
                     data=before,
