@@ -463,6 +463,8 @@ class Checks(object):
                 "ping_api_token",
                 "channels",
                 "tags",
+                # grace may be None in API response but 3600 (default) in module params
+                "grace",
             ]
             params_match = all(
                 before.get(k) == request_params.get(k)
