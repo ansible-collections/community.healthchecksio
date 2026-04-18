@@ -210,14 +210,18 @@ def main():
         uuid=dict(type="str", required=False, default=""),
         slug=dict(type="str", required=False, default=""),
     )
-    module = AnsibleModule(
+    module_kwargs = dict(
         argument_spec=argument_spec,
         supports_check_mode=True,
-        supports_diff_mode=True,
         required_if=[("state", "absent", ["uuid"]), ("state", "pause", ["uuid"])],
         required_together=[("schedule", "tz")],
         mutually_exclusive=[("timeout", "schedule"), ("timeout", "tz")],
     )
+    # supports_diff_mode was added in ansible-core 2.10
+    try:
+        module = AnsibleModule(supports_diff_mode=True, **module_kwargs)
+    except TypeError:
+        module = AnsibleModule(**module_kwargs)
 
     run(module)
 
