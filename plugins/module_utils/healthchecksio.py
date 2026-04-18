@@ -472,7 +472,9 @@ class Checks(object):
             tags_match = before.get("tags", "") == request_params.get("tags")
             if params_match and channels_match and tags_match:
                 diff = (
-                    dict(before=before, after=before) if self.module.diff_mode else None
+                    dict(before=before, after=before)
+                    if getattr(self.module, "diff_mode", False)
+                    else None
                 )
                 self.module.exit_json(
                     changed=False,
@@ -487,7 +489,11 @@ class Checks(object):
         if status_code == 200:
             uuid = self.get_uuid(json_data)
             after = json_data
-            diff = dict(before=existing, after=after) if self.module.diff_mode else None
+            diff = (
+                dict(before=existing, after=after)
+                if getattr(self.module, "diff_mode", False)
+                else None
+            )
             self.module.exit_json(
                 changed=True,
                 msg="Existing check {0} found and updated".format(uuid),
@@ -497,7 +503,11 @@ class Checks(object):
 
         elif status_code == 201:
             uuid = self.get_uuid(json_data)
-            diff = dict(before={}, after=json_data) if self.module.diff_mode else None
+            diff = (
+                dict(before={}, after=json_data)
+                if getattr(self.module, "diff_mode", False)
+                else None
+            )
             self.module.exit_json(
                 changed=True,
                 msg="New check {0} created".format(uuid),
