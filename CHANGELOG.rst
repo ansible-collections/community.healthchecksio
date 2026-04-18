@@ -5,6 +5,14 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v1.3.2
+======
+
+Bugfixes
+--------
+
+- Replace deprecated ``ansible.module_utils._text`` import with ``ansible.module_utils.common.text.converters`` (https://github.com/ansible-collections/community.healthchecksio/pull/46).
+
 v1.3.1
 ======
 
