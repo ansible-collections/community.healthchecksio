@@ -385,8 +385,20 @@ class Checks(object):
             channels_str = channels_param
 
         if len(c) == 1:
-            # Check if params match (excluding unique/api_key/channels)
-            skip = {"unique", "api_key", "channels", "tags"}
+            # Check if params match (excluding unique/api_key/channels/grace)
+            skip = {
+                "unique",
+                "api_key",
+                "management_api_key",
+                "management_api_token",
+                "management_api_base_url",
+                "ping_api_key",
+                "ping_api_base_url",
+                "ping_api_token",
+                "channels",
+                "tags",
+                "grace",  # API may return None, module defaults to 3600
+            }
             params_match = all(
                 c[0].get(k) == request_params.get(k)
                 for k in request_params
@@ -463,8 +475,10 @@ class Checks(object):
                 "ping_api_token",
                 "channels",
                 "tags",
-                # grace may be None in API response but 3600 (default) in module params
+                # grace: API may return None, module defaults to 3600
                 "grace",
+                # desc: API returns "", module params has None (no default in spec)
+                "desc",
             ]
             params_match = all(
                 before.get(k) == request_params.get(k)
