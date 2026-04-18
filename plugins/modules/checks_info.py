@@ -34,6 +34,11 @@ options:
       - If specified, returns this specific check.
     type: str
     required: false
+  name:
+    description:
+      - If specified, filters the checks and returns the check with this name.
+    type: str
+    required: false
 extends_documentation_fragment:
   - community.healthchecksio.healthchecksio.documentation
 """
@@ -65,11 +70,12 @@ def main():
         state=dict(type="str", choices=["present"], default="present"),
         tags=dict(type="list", elements="str", required=False),
         uuid=dict(type="str", required=False),
+        name=dict(type="str", required=False),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
-        mutually_exclusive=[("tags", "uuid")],
+        mutually_exclusive=[("tags", "uuid"), ("name", "uuid")],
     )
 
     run(module)

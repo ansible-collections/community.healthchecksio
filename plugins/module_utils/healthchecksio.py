@@ -296,6 +296,11 @@ class ChecksInfo(object):
         if uuid is not None:
             endpoint += "/" + uuid
 
+        name = self.module.params.get("name", None)
+        if name is not None:
+            separator = "&" if "?" in endpoint else "?"
+            endpoint += separator + "name=" + name
+
         response = self.rest.get(endpoint)
         json_data = response.json
         status_code = response.status_code
