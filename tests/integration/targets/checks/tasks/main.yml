@@ -8,6 +8,24 @@
         - api_key is not defined
         - api_key | length == 0
 
+    # Clean up any stale "cron test" check from previous runs before testing
+    - name: Look for existing "cron test" check
+      community.healthchecksio.checks_info:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        name: cron test
+      register: existing_check
+      ignore_errors: true
+
+    - name: Delete existing "cron test" check if found
+      community.healthchecksio.checks:
+        state: absent
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        uuid: "{{ existing_check.data.checks[0].uuid }}"
+      register: cleanup_result
+      when: existing_check.data.checks | length > 0
+
     - name: Create a Cron check named "cron test"
       community.healthchecksio.checks:
         state: present
