@@ -10,7 +10,6 @@ import json
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils._text import to_text
 from ansible.module_utils.basic import env_fallback
-from urllib.parse import urljoin
 
 
 class Response(object):
@@ -130,6 +129,10 @@ class HealthchecksioHelper:
                 fallback=(
                     env_fallback,
                     [
+                        "HEALTHCHECKSIO_API_TOKEN",
+                        "HEALTHCHECKSIO_API_KEY",
+                        "HC_API_TOKEN",
+                        "HC_API_KEY",
                         "HEALTHCHECKSIO_MANAGEMENT_API_KEY",
                         "HC_MANAGEMENT_API_KEY",
                         "HC_MANAGEMENT_KEY",
@@ -520,6 +523,6 @@ class Ping(object):
             self.module.fail_json(
                 changed=False,
                 msg="Failed to send {0} signal to {1} [HTTP {2}]".format(
-                    signal, response.info, status_code
+                    signal, endpoint, status_code
                 ),
             )
