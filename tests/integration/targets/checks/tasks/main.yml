@@ -22,9 +22,9 @@
         state: absent
         api_key: "{{ api_key }}"
         management_api_base_url: "{{ management_api_base_url }}"
-        uuid: "{{ existing_check.data.checks[0].uuid }}"
+        uuid: "{{ existing_check.checks[0].uuid }}"
       register: cleanup_result
-      when: existing_check.data.checks | length > 0
+      when: existing_check.checks | length > 0
 
     - name: Create a Cron check named "cron test"
       community.healthchecksio.checks:
