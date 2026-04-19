@@ -147,16 +147,16 @@ def main():
         "from hc.accounts.models import Project\n"
         "from django.contrib.auth import get_user_model\n"
         "User = get_user_model()\n"
-        "email = '{0}'\n".format(superuser_email)
-        "user, _ = User.objects.get_or_create(\n"
-        "    email=email, defaults={'username': email.split('@')[0]}\n"
-        ")\n"
-        "project = Project.objects.create(owner=user, name='CI Test Project')\n"
-        "if hasattr(project, 'badge_key') and not project.badge_key:\n"
-        "    project.badge_key = uuid.uuid4().hex[:12]\n"
-        "raw_key = project.set_api_key()\n"
-        "project.save()\n"
-        "print(raw_key)\n"
+        + "email = '{0}'\n".format(superuser_email)
+        + "user, _ = User.objects.get_or_create(\n"
+        + "    email=email, defaults={'username': email.split('@')[0]}\n"
+        + ")\n"
+        + "project = Project.objects.create(owner=user, name='CI Test Project')\n"
+        + "if hasattr(project, 'badge_key') and not project.badge_key:\n"
+        + "    project.badge_key = uuid.uuid4().hex[:12]\n"
+        + "raw_key = project.set_api_key()\n"
+        + "project.save()\n"
+        + "print(raw_key)\n"
     )
 
     result = run_command(
