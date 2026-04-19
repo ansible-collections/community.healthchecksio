@@ -20,7 +20,7 @@ def main() -> None:
     )
     content = content.replace(
         '${PING_API_BASE_URL:-"https://hc-ping.com"}',
-        f'http://{host}:8000',
+        f'http://{host}:8000/ping',
     )
     content = content.replace('${PING_API_TOKEN:-""}', '')
     Path('tests/integration/integration_config.yml').write_text(

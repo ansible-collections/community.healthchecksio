@@ -130,6 +130,7 @@ def main() -> None:
 
     setup_script = (
         "import os\n"
+        "import uuid\n"
         "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hc.settings')\n"
         "import django\n"
         "django.setup()\n"
@@ -141,6 +142,8 @@ def main() -> None:
         "    email=email, defaults={'username': email.split('@')[0]}\n"
         ")\n"
         "project = Project.objects.create(owner=user, name='CI Test Project')\n"
+        "if hasattr(project, 'badge_key') and not project.badge_key:\n"
+        "    project.badge_key = uuid.uuid4().hex[:12]\n"
         "raw_key = project.set_api_key()\n"
         "project.save()\n"
         "print(raw_key)\n"
