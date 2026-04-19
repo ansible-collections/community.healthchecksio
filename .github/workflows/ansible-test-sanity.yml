@@ -12,13 +12,19 @@ jobs:
     name: Sanity (Ⓐ$${{ matrix.ansible }})
     strategy:
       matrix:
-        ansible:
-        - stable-2.9
-        - stable-2.10
-        - stable-2.11
-        - stable-2.12
-        - stable-2.13
-        - devel
+        include:
+          - ansible: stable-2.9
+            python-version: '3.9'
+          - ansible: stable-2.10
+            python-version: '3.9'
+          - ansible: stable-2.11
+            python-version: '3.9'
+          - ansible: stable-2.12
+            python-version: '3.9'
+          - ansible: stable-2.13
+            python-version: '3.9'
+          - ansible: devel
+            python-version: '3.12'
     runs-on: ubuntu-latest
     steps:
       - name: Perform testing
@@ -26,7 +32,7 @@ jobs:
         with:
           ansible-core-version: ${{ matrix.ansible }}
           # pre-test-cmd:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}
           # target-python-version:
           testing-type: sanity
           # test-deps:
