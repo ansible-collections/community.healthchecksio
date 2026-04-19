@@ -49,10 +49,17 @@ jobs:
 
       - name: Wait for Healthchecks to be healthy
         run: |
+          echo "Waiting up to 5 minutes for container to be healthy..."
           for i in $(seq 60); do
-            wget -qO- --spider http://127.0.0.1:8000/api/v3/status/ && echo healthy && break
+            wget -qO- --spider http://127.0.0.1:8000/api/v3/status/ && echo "healthy" && break
+            echo -n "."
             sleep 5
-          done | tail -1
+          done
+          echo ""
+          echo "=== Container logs ==="
+          docker compose -f tests/docker/docker-compose.yml logs web --tail=30 || true
+          echo "=== Container inspect ==="
+          docker compose -f tests/docker/docker-compose.yml ps || true
 
       - name: Bootstrap API key
         env:
