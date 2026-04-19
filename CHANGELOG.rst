@@ -4,7 +4,6 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
-
 v1.5.0
 ======
 
@@ -16,8 +15,8 @@ Minor Changes
 Bugfixes
 --------
 
-- checks - Fix idempotency when comparing ``grace`` for Cron checks if the API omits or returns ``null`` for ``grace`` while the module applies a default.
 - checks - Declare ``supports_diff_mode`` in a form compatible with Ansible 2.9.
+- checks - Fix idempotency when comparing ``grace`` for Cron checks if the API omits or returns ``null`` for ``grace`` while the module applies a default.
 - plugins/module_utils - Add legacy metaclass boilerplate for current ``ansible-test sanity`` expectations.
 
 v1.4.0
@@ -26,11 +25,11 @@ v1.4.0
 Minor Changes
 -------------
 
-- healthchecksio.checks - Add support for self-hosted Healthchecks.io instances via ``management_api_base_url`` and ``ping_api_base_url`` parameters.
 - healthchecksio.checks - Add ``management_api_token`` (with ``api_key`` alias) and ``ping_api_token`` for separate management/ping token support.
-- healthchecksio.checks - Proper check_mode support (delete/pause report would-be changes instead of silently exiting early).
 - healthchecksio.checks - Add diff_mode support (returns ``before``/``after`` state on create/update).
+- healthchecksio.checks - Add support for self-hosted Healthchecks.io instances via ``management_api_base_url`` and ``ping_api_base_url`` parameters.
 - healthchecksio.checks - Fix idempotency comparison to include the ``tags`` field.
+- healthchecksio.checks - Proper check_mode support (delete/pause report would-be changes instead of silently exiting early).
 
 v1.3.2
 ======
