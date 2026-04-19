@@ -1,0 +1,61 @@
+---
+# Self-hosted Healthchecks stack for CI integration testing.
+# Spins up an ephemeral PostgreSQL + Healthchecks container per run.
+#
+# Usage:
+#   docker-compose -f tests/docker/docker-compose.yml up -d
+#   docker-compose -f tests/docker/docker-compose.yml down -v
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hc
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hc-password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    health:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d hc']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  web:
+    image: healthchecks/healthchecks:v4.1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ALLOWED_HOSTS: '*'
+      DEBUG: 'true'
+      DB: postgres
+      DB_HOST: db
+      DB_NAME: hc
+      DB_USER: postgres
+      DB_PASSWORD: hc-password
+      DB_PORT: '5432'
+      DB_SSLMODE: prefer
+      DEFAULT_FROM_EMAIL: ci@example.com
+      EMAIL_HOST: ''
+      EMAIL_HOST_PASSWORD: ''
+      EMAIL_HOST_USER: ''
+      EMAIL_PORT: '25'
+      EMAIL_USE_TLS: 'false'
+      SITE_NAME: Healthchecks CI
+      DJANGO_SETTINGS_MODULE: hc.settings
+      # Static placeholder — safe for ephemeral CI, prevents Django session errors
+      SECRET_KEY: ci-ephemeral-test-key
+    ports:
+      - '127.0.0.1:8000:8000'
+    health:
+      test: ['CMD-SHELL', 'wget -qO- --spider http://localhost:8000/static/img/favicon.png || exit 1']
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+volumes:
+  db_data:
