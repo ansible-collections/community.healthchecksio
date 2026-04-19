@@ -17,8 +17,6 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - ansible: stable-2.9
-            python-version: '3.9'
           - ansible: stable-2.10
             python-version: '3.9'
           - ansible: stable-2.11
