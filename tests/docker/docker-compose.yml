@@ -17,7 +17,7 @@ services:
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - db_data:/var/lib/postgresql/data
-    health:
+    healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d hc']
       interval: 2s
       timeout: 5s
@@ -51,7 +51,7 @@ services:
       SECRET_KEY: ci-ephemeral-test-key
     ports:
       - '127.0.0.1:8000:8000'
-    health:
+    healthcheck:
       test: ['CMD-SHELL', 'wget -qO- --spider http://localhost:8000/static/img/favicon.png || exit 1']
       interval: 5s
       timeout: 10s
