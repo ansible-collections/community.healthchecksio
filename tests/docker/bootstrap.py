@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+__metaclass__ = type
+
 """Bootstrap a self-hosted Healthchecks instance for CI testing.
 
 Creates a superuser and project with read-write API key.

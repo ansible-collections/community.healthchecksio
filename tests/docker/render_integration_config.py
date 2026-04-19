@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+__metaclass__ = type
+
 """Render tests/integration/integration_config.yml for self-hosted CI."""
 
 import os
