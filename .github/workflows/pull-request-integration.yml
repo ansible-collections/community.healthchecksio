@@ -73,28 +73,7 @@ jobs:
         uses: ansible-community/ansible-test-gh-action@release/v1
         with:
           git-checkout-ref: ${{ github.event.pull_request.head.sha }}
-          pre-test-cmd: >-
-            python3 - <<'PYEOF'
-            with open('/tmp/hc_ci_key.txt') as f:
-                api_key = f.read().strip()
-            with open('tests/integration/integration_config.yml.template') as f:
-                content = f.read()
-            content = content.replace(
-                '${MANAGEMENT_API_TOKEN:-$HEALTHCHECKSIO_API_TOKEN}',
-                api_key
-            )
-            content = content.replace(
-                '${MANAGEMENT_API_BASE_URL:-"https://healthchecks.io/api/v1"}',
-                'http://127.0.0.1:8000/api/v1'
-            )
-            content = content.replace(
-                '${PING_API_BASE_URL:-"https://hc-ping.com"}',
-                'http://127.0.0.1:8000'
-            )
-            content = content.replace('${PING_API_TOKEN:-""}', '')
-            with open('tests/integration/integration_config.yml', 'w') as f:
-                f.write(content)
-            PYEOF
+          pre-test-cmd: python3 tests/docker/render_integration_config.py
           python-version: 3.9
           target-python-version: 3.8
           testing-type: integration
