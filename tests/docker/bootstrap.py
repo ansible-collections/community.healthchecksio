@@ -18,20 +18,20 @@ import sys
 import time
 
 
-def wait_for_healthy(url: str, timeout: int = 120) -> None:
+def wait_for_healthy(hc_url: str, timeout: int = 180) -> None:
     """Block until the Healthchecks instance responds."""
     import urllib.request
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         try:
-            req = urllib.request.Request(url + "/")
+            req = urllib.request.Request(hc_url + "/api/v3/status/")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status == 200:
                     return
         except Exception:
             pass
-        time.sleep(3)
-    raise RuntimeError(f"Healthchecks not healthy at {url} after {timeout}s")
+        time.sleep(5)
+    raise RuntimeError(f"Healthchecks not healthy at {hc_url} after {timeout}s")
 
 
 def docker_exec(service: str, *args: str, input: bytes = b"") -> bytes:

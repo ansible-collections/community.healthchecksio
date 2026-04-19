@@ -52,10 +52,10 @@ services:
     ports:
       - '127.0.0.1:8000:8000'
     healthcheck:
-      test: ['CMD-SHELL', 'wget -qO- --spider http://localhost:8000/ || exit 1']
+      test: ['CMD-SHELL', 'SITE_ROOT=http://localhost:8000 ./fetchstatus.py || exit 1']
       interval: 5s
       timeout: 10s
-      retries: 30
+      retries: 40
 
 volumes:
   db_data:
