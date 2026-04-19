@@ -24,14 +24,14 @@ def wait_for_healthy(url: str, timeout: int = 120) -> None:
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         try:
-            req = urllib.request.Request(hc_url + "/")
+            req = urllib.request.Request(url + "/")
             with urllib.request.urlopen(req, timeout=5) as resp:
                 if resp.status == 200:
                     return
         except Exception:
             pass
         time.sleep(3)
-    raise RuntimeError(f"Healthchecks not healthy at {hc_url} after {timeout}s")
+    raise RuntimeError(f"Healthchecks not healthy at {url} after {timeout}s")
 
 
 def docker_exec(service: str, *args: str, input: bytes = b"") -> bytes:
