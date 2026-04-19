@@ -1,14 +1,12 @@
-#!/usr/bin/env python3
-"""
-Bootstrap a self-hosted Healthchecks instance for CI testing.
+"""Bootstrap a self-hosted Healthchecks instance for CI testing.
 
 Creates a superuser and project with read-write API key.
 Writes the raw API key to --api-key-output.
 
 Usage:
-    docker-compose -f tests/docker/docker-compose.yml up -d
+    docker compose -f tests/docker/docker-compose.yml up -d
     python3 tests/docker/bootstrap.py --api-key-output /tmp/api_key.txt
-    docker-compose -f tests/docker/docker-compose.yml down -v
+    docker compose -f tests/docker/docker-compose.yml down -v
 """
 
 import argparse
@@ -16,11 +14,11 @@ import os
 import subprocess
 import sys
 import time
+import urllib.request
 
 
 def wait_for_healthy(hc_url: str, timeout: int = 180) -> None:
     """Block until the Healthchecks instance responds."""
-    import urllib.request
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         try:
@@ -34,10 +32,16 @@ def wait_for_healthy(hc_url: str, timeout: int = 180) -> None:
     raise RuntimeError(f"Healthchecks not healthy at {hc_url} after {timeout}s")
 
 
-def docker_exec(service: str, *args: str, input: bytes = b"") -> bytes:
-    cmd = ["docker", "exec", "-i", service] + list(args)
-    result = subprocess.run(cmd, input=input, capture_output=True)
-    return result.stdout + result.stderr
+def run_command(
+    *args: str, input_data: bytes | None = None
+) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        list(args),
+        input=input_data,
+        capture_output=True,
+        text=False,
+        check=False,
+    )
 
 
 def main() -> None:
@@ -66,24 +70,35 @@ def main() -> None:
     wait_for_healthy(hc_url)
     print(f"Healthchecks is healthy at {hc_url}", file=sys.stderr)
 
-    # Determine the actual container name
     result = subprocess.run(
         [
-            "docker", "ps", "--filter", f"name={args.project_name}_{args.service_name}",
-            "--format", "{{.Names}}",
+            "docker",
+            "ps",
+            "--filter",
+            f"name={args.project_name}_{args.service_name}",
+            "--format",
+            "{{.Names}}",
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
-    container_names = [n for n in result.stdout.strip().split("\n") if n]
+    container_names = [name for name in result.stdout.strip().split("\n") if name]
     if not container_names:
-        # Fallback: try just the service name
         result = subprocess.run(
-            ["docker", "ps", "--filter", f"name={args.service_name}", "--format", "{{.Names}}"],
+            [
+                "docker",
+                "ps",
+                "--filter",
+                f"name={args.service_name}",
+                "--format",
+                "{{.Names}}",
+            ],
             capture_output=True,
             text=True,
+            check=False,
         )
-        container_names = [n for n in result.stdout.strip().split("\n") if n]
+        container_names = [name for name in result.stdout.strip().split("\n") if name]
 
     if not container_names:
         print("Error: could not find running Healthchecks container", file=sys.stderr)
@@ -92,41 +107,55 @@ def main() -> None:
     container = container_names[0]
     print(f"Using container: {container}", file=sys.stderr)
 
-    # 1. Create superuser
-    result = subprocess.run(
-        ["docker", "exec", "-i", container,
-         "python", "manage.py", "createsuperuser",
-         "--noinput", f"--email={superuser_email}"],
-        input=superuser_password.encode(),
-        capture_output=True,
+    result = run_command(
+        "docker",
+        "exec",
+        "-i",
+        container,
+        "python",
+        "manage.py",
+        "createsuperuser",
+        "--noinput",
+        f"--email={superuser_email}",
+        input_data=superuser_password.encode(),
     )
-    if result.returncode != 0 and b"already exists" not in result.stderr.lower() and b"duplicate" not in result.stderr.lower():
+    if (
+        result.returncode != 0
+        and b"already exists" not in result.stderr.lower()
+        and b"duplicate" not in result.stderr.lower()
+    ):
         print(f"Warning: createsuperuser: {result.stderr.decode()}", file=sys.stderr)
     else:
         print(f"Superuser {superuser_email} ready", file=sys.stderr)
 
-    # 2. Create project + API key via Django shell
     setup_script = (
-        f"import os\n"
-        f"os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hc.settings')\n"
-        f"import django\n"
-        f"django.setup()\n"
-        f"from hc.accounts.models import Project\n"
-        f"from django.contrib.auth import get_user_model\n"
-        f"User = get_user_model()\n"
+        "import os\n"
+        "os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hc.settings')\n"
+        "import django\n"
+        "django.setup()\n"
+        "from hc.accounts.models import Project\n"
+        "from django.contrib.auth import get_user_model\n"
+        "User = get_user_model()\n"
         f"email = '{superuser_email}'\n"
-        f"user, _ = User.objects.get_or_create(\n"
-        f"    email=email, defaults={{'username': email.split('@')[0]}}\n"
-        f")\n"
-        f"project = Project.objects.create(owner=user, name='CI Test Project')\n"
-        f"raw_key = project.set_api_key()\n"
-        f"project.save()\n"
-        f"print(raw_key)\n"
+        "user, _ = User.objects.get_or_create(\n"
+        "    email=email, defaults={'username': email.split('@')[0]}\n"
+        ")\n"
+        "project = Project.objects.create(owner=user, name='CI Test Project')\n"
+        "raw_key = project.set_api_key()\n"
+        "project.save()\n"
+        "print(raw_key)\n"
     )
 
-    result = subprocess.run(
-        ["docker", "exec", "-i", container, "python", "manage.py", "shell", "-c", setup_script],
-        capture_output=True,
+    result = run_command(
+        "docker",
+        "exec",
+        "-i",
+        container,
+        "python",
+        "manage.py",
+        "shell",
+        "-c",
+        setup_script,
     )
     if result.returncode != 0:
         print(f"Error creating API key: {result.stderr.decode()}", file=sys.stderr)
@@ -137,10 +166,12 @@ def main() -> None:
         print(f"Error: empty API key. stdout: {result.stdout}", file=sys.stderr)
         sys.exit(1)
 
-    with open(args.api_key_output, "w") as f:
-        f.write(api_key + "\n")
+    with open(args.api_key_output, "w", encoding="utf-8") as file_obj:
+        file_obj.write(api_key + "\n")
 
-    print(f"Bootstrap complete. API key written to {args.api_key_output}", file=sys.stderr)
+    print(
+        f"Bootstrap complete. API key written to {args.api_key_output}", file=sys.stderr
+    )
 
 
 if __name__ == "__main__":

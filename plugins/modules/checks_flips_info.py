@@ -55,7 +55,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     HealthchecksioHelper,
     ChecksFlipsInfo,
 )
-from ansible.module_utils.basic import AnsibleModule, env_fallback
+from ansible.module_utils.basic import AnsibleModule
 
 
 def run(module):

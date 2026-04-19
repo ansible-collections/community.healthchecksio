@@ -112,6 +112,12 @@ options:
     type: str
     required: false
     default: ""
+  slug:
+    description:
+      - Optional slug for the check URL.
+    type: str
+    required: false
+    default: ""
 extends_documentation_fragment:
   - community.healthchecksio.healthchecksio.documentation
 """
@@ -176,7 +182,7 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     HealthchecksioHelper,
     Checks,
 )
-from ansible.module_utils.basic import AnsibleModule, env_fallback
+from ansible.module_utils.basic import AnsibleModule
 
 
 def run(module):
@@ -210,18 +216,13 @@ def main():
         uuid=dict(type="str", required=False, default=""),
         slug=dict(type="str", required=False, default=""),
     )
-    module_kwargs = dict(
+    module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
         required_if=[("state", "absent", ["uuid"]), ("state", "pause", ["uuid"])],
         required_together=[("schedule", "tz")],
         mutually_exclusive=[("timeout", "schedule"), ("timeout", "tz")],
     )
-    # supports_diff_mode was added in ansible-core 2.10
-    try:
-        module = AnsibleModule(supports_diff_mode=True, **module_kwargs)
-    except TypeError:
-        module = AnsibleModule(**module_kwargs)
 
     run(module)
 
