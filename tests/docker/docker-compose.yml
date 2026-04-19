@@ -51,7 +51,7 @@ services:
       # Static placeholder — safe for ephemeral CI, prevents Django session errors
       SECRET_KEY: ci-ephemeral-test-key
     ports:
-      - '127.0.0.1:8000:8000'
+      - '8000:8000'
     healthcheck:
       test: ['CMD-SHELL', 'SITE_ROOT=http://localhost:8000 ./fetchstatus.py || exit 1']
       interval: 5s

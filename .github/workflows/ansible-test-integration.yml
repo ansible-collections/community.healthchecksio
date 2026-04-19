@@ -68,7 +68,11 @@ jobs:
       - name: Run integration tests
         uses: ansible-community/ansible-test-gh-action@release/v1
         with:
-          pre-test-cmd: python3 tests/docker/render_integration_config.py
+          pre-test-cmd: >-
+            HC_TEST_HOST=$(ip -4 addr show docker0 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1);
+            [ -n "$HC_TEST_HOST" ] || HC_TEST_HOST=172.17.0.1;
+            export HC_TEST_HOST;
+            python3 tests/docker/render_integration_config.py
           python-version: 3.9
           target-python-version: 3.8
           testing-type: integration
