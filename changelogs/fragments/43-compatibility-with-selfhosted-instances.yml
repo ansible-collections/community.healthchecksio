@@ -1,2 +1,0 @@
-minor_changes:
-  - Add support for using self-hosted instances of Healthchecks.io (https://github.com/ansible-collections/community.healthchecksio/pull/43)

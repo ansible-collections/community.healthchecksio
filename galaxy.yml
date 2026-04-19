@@ -2,7 +2,7 @@
 
 namespace: community
 name: healthchecksio
-version: 1.4.0
+version: 1.5.0
 readme: README.md
 authors:
   - Mark Mercado (https://github.com/mamercad)

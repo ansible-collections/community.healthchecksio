@@ -39,6 +39,7 @@ options:
       - If specified, filters the checks and returns the check with this name.
     type: str
     required: false
+    version_added: 1.5.0
 extends_documentation_fragment:
   - community.healthchecksio.healthchecksio.documentation
 """

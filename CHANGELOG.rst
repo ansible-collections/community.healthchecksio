@@ -5,6 +5,21 @@ Community Healthchecks.io Release Notes
 .. contents:: Topics
 
 
+v1.5.0
+======
+
+Minor Changes
+-------------
+
+- checks_info - Add optional ``name`` filter when listing checks; values sent to the API are URL-encoded.
+
+Bugfixes
+--------
+
+- checks - Fix idempotency when comparing ``grace`` for Cron checks if the API omits or returns ``null`` for ``grace`` while the module applies a default.
+- checks - Declare ``supports_diff_mode`` in a form compatible with Ansible 2.9.
+- plugins/module_utils - Add legacy metaclass boilerplate for current ``ansible-test sanity`` expectations.
+
 v1.4.0
 ======
 
