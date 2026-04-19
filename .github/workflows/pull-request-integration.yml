@@ -50,8 +50,8 @@ jobs:
       - name: Wait for Healthchecks to be healthy
         run: |
           for i in $(seq 60); do
-            wget -qO- --spider http://127.0.0.1:8000/static/img/favicon.png && echo healthy && break
-            sleep 2
+            wget -qO- --spider http://127.0.0.1:8000/ && echo healthy && break
+            sleep 3
           done | tail -1
 
       - name: Bootstrap API key
