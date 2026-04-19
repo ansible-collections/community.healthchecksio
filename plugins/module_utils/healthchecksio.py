@@ -7,7 +7,10 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-from urllib.parse import quote
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils.common.text.converters import to_text
 from ansible.module_utils.basic import env_fallback
@@ -392,19 +395,21 @@ class Checks(object):
 
         if len(c) == 1:
             # Check if params match (excluding unique/api_key/channels/grace)
-            skip = {
-                "unique",
-                "api_key",
-                "management_api_key",
-                "management_api_token",
-                "management_api_base_url",
-                "ping_api_key",
-                "ping_api_base_url",
-                "ping_api_token",
-                "channels",
-                "tags",
-                "grace",  # API may return None, module defaults to 3600
-            }
+            skip = set(
+                [
+                    "unique",
+                    "api_key",
+                    "management_api_key",
+                    "management_api_token",
+                    "management_api_base_url",
+                    "ping_api_key",
+                    "ping_api_base_url",
+                    "ping_api_token",
+                    "channels",
+                    "tags",
+                    "grace",  # API may return None, module defaults to 3600
+                ]
+            )
             params_match = all(
                 c[0].get(k) == request_params.get(k)
                 for k in request_params

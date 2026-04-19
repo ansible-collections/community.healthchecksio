@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 """Bootstrap a self-hosted Healthchecks instance for CI testing.
 
 Creates a superuser and project with read-write API key.
@@ -14,27 +16,32 @@ import os
 import subprocess
 import sys
 import time
-import urllib.request
 
 
-def wait_for_healthy(hc_url: str, timeout: int = 180) -> None:
+def wait_for_healthy(hc_url, timeout=180):
     """Block until the Healthchecks instance responds."""
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         try:
-            req = urllib.request.Request(hc_url + "/api/v3/status/")
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status == 200:
-                    return
+            result = subprocess.run(
+                ["curl", "-fsS", hc_url + "/api/v3/status/"],
+                capture_output=True,
+                text=False,
+                check=False,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return
         except Exception:
             pass
         time.sleep(5)
-    raise RuntimeError(f"Healthchecks not healthy at {hc_url} after {timeout}s")
+    raise RuntimeError(
+        "Healthchecks not healthy at {0} after {1}s".format(hc_url, timeout)
+    )
 
 
-def run_command(
-    *args: str, input_data: bytes | None = None
-) -> subprocess.CompletedProcess:
+def run_command(*args, **kwargs):
+    input_data = kwargs.get("input_data")
     return subprocess.run(
         list(args),
         input=input_data,
@@ -44,7 +51,7 @@ def run_command(
     )
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser(description="Bootstrap Healthchecks for CI")
     parser.add_argument(
         "--project-name",
@@ -68,14 +75,14 @@ def main() -> None:
 
     hc_url = os.environ.get("HC_BASE_URL", "http://localhost:8000")
     wait_for_healthy(hc_url)
-    print(f"Healthchecks is healthy at {hc_url}", file=sys.stderr)
+    print("Healthchecks is healthy at {0}".format(hc_url), file=sys.stderr)
 
     result = subprocess.run(
         [
             "docker",
             "ps",
             "--filter",
-            f"name={args.project_name}_{args.service_name}",
+            "name={0}_{1}".format(args.project_name, args.service_name),
             "--format",
             "{{.Names}}",
         ],
@@ -90,7 +97,7 @@ def main() -> None:
                 "docker",
                 "ps",
                 "--filter",
-                f"name={args.service_name}",
+                "name={0}".format(args.service_name),
                 "--format",
                 "{{.Names}}",
             ],
@@ -105,7 +112,7 @@ def main() -> None:
         sys.exit(1)
 
     container = container_names[0]
-    print(f"Using container: {container}", file=sys.stderr)
+    print("Using container: {0}".format(container), file=sys.stderr)
 
     result = run_command(
         "docker",
@@ -116,7 +123,7 @@ def main() -> None:
         "manage.py",
         "createsuperuser",
         "--noinput",
-        f"--email={superuser_email}",
+        "--email={0}".format(superuser_email),
         input_data=superuser_password.encode(),
     )
     if (
@@ -124,9 +131,12 @@ def main() -> None:
         and b"already exists" not in result.stderr.lower()
         and b"duplicate" not in result.stderr.lower()
     ):
-        print(f"Warning: createsuperuser: {result.stderr.decode()}", file=sys.stderr)
+        print(
+            "Warning: createsuperuser: {0}".format(result.stderr.decode()),
+            file=sys.stderr,
+        )
     else:
-        print(f"Superuser {superuser_email} ready", file=sys.stderr)
+        print("Superuser {0} ready".format(superuser_email), file=sys.stderr)
 
     setup_script = (
         "import os\n"
@@ -137,7 +147,7 @@ def main() -> None:
         "from hc.accounts.models import Project\n"
         "from django.contrib.auth import get_user_model\n"
         "User = get_user_model()\n"
-        f"email = '{superuser_email}'\n"
+        "email = '{0}'\n".format(superuser_email)
         "user, _ = User.objects.get_or_create(\n"
         "    email=email, defaults={'username': email.split('@')[0]}\n"
         ")\n"
@@ -161,19 +171,26 @@ def main() -> None:
         setup_script,
     )
     if result.returncode != 0:
-        print(f"Error creating API key: {result.stderr.decode()}", file=sys.stderr)
+        print(
+            "Error creating API key: {0}".format(result.stderr.decode()),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     api_key = result.stdout.strip().split(b"\n")[-1].decode().strip()
     if not api_key:
-        print(f"Error: empty API key. stdout: {result.stdout}", file=sys.stderr)
+        print(
+            "Error: empty API key. stdout: {0}".format(result.stdout),
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     with open(args.api_key_output, "w", encoding="utf-8") as file_obj:
         file_obj.write(api_key + "\n")
 
     print(
-        f"Bootstrap complete. API key written to {args.api_key_output}", file=sys.stderr
+        "Bootstrap complete. API key written to {0}".format(args.api_key_output),
+        file=sys.stderr,
     )
 
 

@@ -39,7 +39,3 @@ jobs:
           python-version: ${{ matrix.python-version }}
           # target-python-version:
           testing-type: units
-          test-deps: >-
-            ansible.netcommon
-            ansible.utils
-            community.general
