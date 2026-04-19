@@ -26,6 +26,7 @@ services:
   web:
     image: healthchecks/healthchecks:v4.1
     restart: unless-stopped
+    working_dir: /opt/healthchecks
     depends_on:
       db:
         condition: service_healthy
