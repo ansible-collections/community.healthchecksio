@@ -99,6 +99,12 @@ jobs:
           testing-type: integration
           test-deps: community.general
 
+      - name: Dump self-hosted container logs on failure
+        if: failure()
+        run: |
+          docker compose -f tests/docker/docker-compose.yml ps || true
+          docker compose -f tests/docker/docker-compose.yml logs --tail=300 db web || true
+
       - name: Teardown
         if: always()
         run: docker compose -f tests/docker/docker-compose.yml down -v

@@ -32,7 +32,7 @@ services:
         condition: service_healthy
     environment:
       ALLOWED_HOSTS: '*'
-      DEBUG: 'true'
+      DEBUG: 'True'
       DB: postgres
       DB_HOST: db
       DB_NAME: hc
@@ -45,7 +45,7 @@ services:
       EMAIL_HOST_PASSWORD: ''
       EMAIL_HOST_USER: ''
       EMAIL_PORT: '25'
-      EMAIL_USE_TLS: 'false'
+      EMAIL_USE_TLS: 'False'
       SITE_NAME: Healthchecks CI
       DJANGO_SETTINGS_MODULE: hc.settings
       # Static placeholder — safe for ephemeral CI, prevents Django session errors
