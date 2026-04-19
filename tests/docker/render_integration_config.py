@@ -10,7 +10,9 @@ def main():
     with open("/tmp/hc_ci_key.txt", encoding="utf-8") as file_obj:
         api_key = file_obj.read().strip()
     host = os.environ.get("HC_TEST_HOST", "127.0.0.1").strip()
-    with open("tests/integration/integration_config.yml.template", encoding="utf-8") as file_obj:
+    with open(
+        "tests/integration/integration_config.yml.template", encoding="utf-8"
+    ) as file_obj:
         content = file_obj.read()
     content = content.replace(
         "${MANAGEMENT_API_TOKEN:-$HEALTHCHECKSIO_API_TOKEN}", api_key
@@ -24,7 +26,9 @@ def main():
         "http://{0}:8000/ping".format(host),
     )
     content = content.replace('${PING_API_TOKEN:-""}', "")
-    with open("tests/integration/integration_config.yml", "w", encoding="utf-8") as file_obj:
+    with open(
+        "tests/integration/integration_config.yml", "w", encoding="utf-8"
+    ) as file_obj:
         file_obj.write(content)
 
 
