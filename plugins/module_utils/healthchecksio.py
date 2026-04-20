@@ -204,9 +204,6 @@ class BadgesInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
         endpoint = "badges"
 
         response = self.rest.get(endpoint)
@@ -232,9 +229,6 @@ class ChannelsInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
         endpoint = "channels"
 
         response = self.rest.get(endpoint)
@@ -260,9 +254,6 @@ class ChecksFlipsInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
         uuid = self.module.params.get("uuid", None)
         endpoint = "checks/{0}/flips".format(uuid)
 
@@ -285,9 +276,6 @@ class ChecksInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
         endpoint = "checks"
 
         tags = self.module.params.get("tags", None)
@@ -325,9 +313,6 @@ class ChecksPingsInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        if self.module.check_mode:
-            self.module.exit_json(changed=False, data={})
-
         uuid = self.module.params.get("uuid", None)
         endpoint = "checks/{0}/pings".format(uuid)
 
