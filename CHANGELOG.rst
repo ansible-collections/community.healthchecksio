@@ -4,6 +4,14 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
+v1.5.1
+======
+
+Bugfixes
+--------
+
+- badges_info, channels_info, checks_flips_info, checks_info, and checks_pings_info perform read-only GET requests in check mode instead of returning empty data (https://github.com/ansible-collections/community.healthchecksio/issues/34).
+
 v1.5.0
 ======
 
