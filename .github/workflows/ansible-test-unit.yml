@@ -13,20 +13,19 @@ jobs:
     runs-on: ubuntu-latest
     name: Units (Ⓐ${{ matrix.ansible }})
     strategy:
-      # As soon as the first unit test fails, cancel the others to free up the CI queue
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - ansible: stable-2.10
-            python-version: '3.9'
+            origin-python-version: '3.9'
           - ansible: stable-2.11
-            python-version: '3.9'
+            origin-python-version: '3.9'
           - ansible: stable-2.12
-            python-version: '3.9'
+            origin-python-version: '3.9'
           - ansible: stable-2.13
-            python-version: '3.9'
+            origin-python-version: '3.9'
           - ansible: devel
-            python-version: '3.12'
+            origin-python-version: '3.13'
 
     steps:
       - name: Perform testing
@@ -34,6 +33,6 @@ jobs:
         with:
           ansible-core-version: ${{ matrix.ansible }}
           # pre-test-cmd:
-          python-version: ${{ matrix.python-version }}
+          origin-python-version: ${{ matrix.origin-python-version }}
           # target-python-version:
           testing-type: units

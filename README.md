@@ -256,7 +256,7 @@ See [Ansible Using collections](https://docs.ansible.com/ansible/devel/user_guid
 
 ## Release notes
 
-See the [changelog](https://github.com/ansible-collections/REPONAMEHERE/tree/main/CHANGELOG.rst).
+See the [changelog](https://github.com/ansible-collections/community.healthchecksio/blob/main/CHANGELOG.rst).
 
 ## Roadmap
 
