@@ -2,7 +2,10 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest.mock import MagicMock, patch
+try:
+    from unittest.mock import MagicMock, patch
+except ImportError:
+    from mock import MagicMock, patch
 
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     HealthchecksioHelper,
@@ -34,6 +37,10 @@ def _mock_fetch_success():
     return resp, info
 
 
+def _last_fetch_kwargs(mock_fetch_url):
+    return mock_fetch_url.call_args_list[-1][1]
+
+
 @patch(
     "ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.fetch_url",
     side_effect=lambda *args, **kwargs: _mock_fetch_success(),
@@ -43,7 +50,7 @@ def test_helper_fetch_url_defaults(mock_fetch_url):
     helper = HealthchecksioHelper(module)
     helper.get("checks")
 
-    _, kwargs = mock_fetch_url.call_args_list[-1]
+    kwargs = _last_fetch_kwargs(mock_fetch_url)
     assert kwargs["validate_certs"] is True
     assert kwargs["timeout"] == 30
 
@@ -57,7 +64,7 @@ def test_helper_fetch_url_validate_certs_false(mock_fetch_url):
     helper = HealthchecksioHelper(module)
     helper.get("checks")
 
-    _, kwargs = mock_fetch_url.call_args_list[-1]
+    kwargs = _last_fetch_kwargs(mock_fetch_url)
     assert kwargs["validate_certs"] is False
 
 
@@ -70,7 +77,7 @@ def test_helper_fetch_url_request_timeout(mock_fetch_url):
     helper = HealthchecksioHelper(module)
     helper.get("checks")
 
-    _, kwargs = mock_fetch_url.call_args_list[-1]
+    kwargs = _last_fetch_kwargs(mock_fetch_url)
     assert kwargs["timeout"] == 99
 
 
@@ -83,7 +90,7 @@ def test_helper_fetch_url_ignores_check_timeout_param(mock_fetch_url):
     helper = HealthchecksioHelper(module)
     helper.get("checks")
 
-    _, kwargs = mock_fetch_url.call_args_list[-1]
+    kwargs = _last_fetch_kwargs(mock_fetch_url)
     assert kwargs["timeout"] == 30
 
 
@@ -96,7 +103,7 @@ def test_ping_helper_head_forwards_connection_params(mock_fetch_url):
     helper = HealthchecksioPingHelper(module)
     helper.head("check-uuid", no_headers=True)
 
-    _, kwargs = mock_fetch_url.call_args_list[-1]
+    kwargs = _last_fetch_kwargs(mock_fetch_url)
     assert kwargs["method"] == "HEAD"
     assert kwargs["validate_certs"] is False
     assert kwargs["timeout"] == 45
