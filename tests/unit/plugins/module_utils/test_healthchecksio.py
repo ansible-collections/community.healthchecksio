@@ -41,6 +41,10 @@ def _last_fetch_kwargs(mock_fetch_url):
     return mock_fetch_url.call_args_list[-1][1]
 
 
+def _last_fetch_module(mock_fetch_url):
+    return mock_fetch_url.call_args_list[-1][0][0]
+
+
 @patch(
     "ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio.fetch_url",
     side_effect=lambda *args, **kwargs: _mock_fetch_success(),
@@ -51,7 +55,8 @@ def test_helper_fetch_url_defaults(mock_fetch_url):
     helper.get("checks")
 
     kwargs = _last_fetch_kwargs(mock_fetch_url)
-    assert kwargs["validate_certs"] is True
+    assert "validate_certs" not in kwargs
+    assert _last_fetch_module(mock_fetch_url).params["validate_certs"] is True
     assert kwargs["timeout"] == 30
 
 
@@ -65,7 +70,8 @@ def test_helper_fetch_url_validate_certs_false(mock_fetch_url):
     helper.get("checks")
 
     kwargs = _last_fetch_kwargs(mock_fetch_url)
-    assert kwargs["validate_certs"] is False
+    assert "validate_certs" not in kwargs
+    assert _last_fetch_module(mock_fetch_url).params["validate_certs"] is False
 
 
 @patch(
@@ -105,5 +111,6 @@ def test_ping_helper_head_forwards_connection_params(mock_fetch_url):
 
     kwargs = _last_fetch_kwargs(mock_fetch_url)
     assert kwargs["method"] == "HEAD"
-    assert kwargs["validate_certs"] is False
+    assert "validate_certs" not in kwargs
+    assert _last_fetch_module(mock_fetch_url).params["validate_certs"] is False
     assert kwargs["timeout"] == 45

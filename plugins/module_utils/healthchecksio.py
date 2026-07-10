@@ -50,7 +50,6 @@ class HealthchecksioHelper:
         self.base_url = self._get_base_url(module)
         self.api_token = self._get_api_token(module)
         self.request_timeout = module.params.get("request_timeout", 30)
-        self.validate_certs = module.params.get("validate_certs", True)
         self.headers = {"X-Api-Key": self.api_token}
 
         response = self.get("checks")
@@ -85,7 +84,6 @@ class HealthchecksioHelper:
             headers=self.headers,
             method=method,
             timeout=self.request_timeout,
-            validate_certs=self.validate_certs,
         )
 
         return Response(resp, info)
@@ -111,7 +109,6 @@ class HealthchecksioHelper:
                 data=data,
                 method="HEAD",
                 timeout=self.request_timeout,
-                validate_certs=self.validate_certs,
             )
         else:
             resp, info = fetch_url(
@@ -121,7 +118,6 @@ class HealthchecksioHelper:
                 headers=self.headers,
                 method="HEAD",
                 timeout=self.request_timeout,
-                validate_certs=self.validate_certs,
             )
         return Response(resp, info)
 
