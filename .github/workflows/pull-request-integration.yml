@@ -4,6 +4,9 @@ on:
   pull_request_target:
     branches: [ main ]
     types: [ opened, synchronize, reopened ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -12,6 +15,7 @@ concurrency:
 jobs:
 
   integration:
+    if: github.event_name == 'pull_request_target'
     # Require reviewers for this environment (uses real healthchecks.io API)
     # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
     environment: integration
@@ -35,6 +39,7 @@ jobs:
           test-deps: community.general
 
   integration_self_hosted:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
