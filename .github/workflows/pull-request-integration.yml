@@ -15,9 +15,14 @@ concurrency:
 jobs:
 
   integration:
-    if: github.event_name == 'pull_request_target'
-    # Require reviewers for this environment (uses real healthchecks.io API)
+    # Same-repo PRs: run on pull_request so the workflow file from the PR branch
+    # is used (pull_request_target always loads workflow from main).
+    # Fork PRs: fall back to pull_request_target for secret access.
     # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+    if: >-
+      (github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository)
+      || github.event_name == 'pull_request_target'
     environment: integration
 
     runs-on: ubuntu-latest
