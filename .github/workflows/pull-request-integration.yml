@@ -9,7 +9,9 @@ on:
     types: [ opened, synchronize, reopened ]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  # Include event_name so pull_request and pull_request_target do not cancel
+  # each other (shared groups left cancelled checks that looked like failures).
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -17,12 +19,14 @@ jobs:
   integration:
     # Same-repo PRs: run on pull_request so the workflow file from the PR branch
     # is used (pull_request_target always loads workflow from main).
-    # Fork PRs: fall back to pull_request_target for secret access.
+    # Fork PRs: only pull_request_target (secrets + safe workflow from main).
+    # Do not allow both events for the same PR — that races concurrency.
     # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
     if: >-
       (github.event_name == 'pull_request'
       && github.event.pull_request.head.repo.full_name == github.repository)
-      || github.event_name == 'pull_request_target'
+      || (github.event_name == 'pull_request_target'
+      && github.event.pull_request.head.repo.full_name != github.repository)
     environment: integration
 
     runs-on: ubuntu-latest
