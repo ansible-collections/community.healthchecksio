@@ -4,16 +4,29 @@ on:
   pull_request_target:
     branches: [ main ]
     types: [ opened, synchronize, reopened ]
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  # Include event_name so pull_request and pull_request_target do not cancel
+  # each other (shared groups left cancelled checks that looked like failures).
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
 
   integration:
-    # Require reviewers for this environment (uses real healthchecks.io API)
+    # Same-repo PRs: run on pull_request so the workflow file from the PR branch
+    # is used (pull_request_target always loads workflow from main).
+    # Fork PRs: only pull_request_target (secrets + safe workflow from main).
+    # Do not allow both events for the same PR — that races concurrency.
     # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+    if: >-
+      (github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository)
+      || (github.event_name == 'pull_request_target'
+      && github.event.pull_request.head.repo.full_name != github.repository)
     environment: integration
 
     runs-on: ubuntu-latest
@@ -28,12 +41,14 @@ jobs:
             ./tests/utils/render.sh
             tests/integration/integration_config.yml.template
             > tests/integration/integration_config.yml
-          python-version: 3.9
+          ansible-core-version: stable-2.13
+          origin-python-version: '3.9'
           target-python-version: 3.8
           testing-type: integration
           test-deps: community.general
 
   integration_self_hosted:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -78,7 +93,8 @@ jobs:
             [ -n "$HC_TEST_HOST" ] || HC_TEST_HOST=172.17.0.1;
             export HC_TEST_HOST;
             python3 tests/docker/render_integration_config.py
-          python-version: 3.9
+          ansible-core-version: stable-2.13
+          origin-python-version: '3.9'
           target-python-version: 3.8
           testing-type: integration
           test-deps: community.general

@@ -49,7 +49,7 @@ class HealthchecksioHelper:
         self.module = module
         self.base_url = self._get_base_url(module)
         self.api_token = self._get_api_token(module)
-        self.timeout = module.params.get("timeout", 30)
+        self.request_timeout = module.params.get("request_timeout", 30)
         self.headers = {"X-Api-Key": self.api_token}
 
         response = self.get("checks")
@@ -83,7 +83,7 @@ class HealthchecksioHelper:
             data=data,
             headers=self.headers,
             method=method,
-            timeout=self.timeout,
+            timeout=self.request_timeout,
         )
 
         return Response(resp, info)
@@ -108,7 +108,7 @@ class HealthchecksioHelper:
                 uri,
                 data=data,
                 method="HEAD",
-                timeout=self.timeout,
+                timeout=self.request_timeout,
             )
         else:
             resp, info = fetch_url(
@@ -117,7 +117,7 @@ class HealthchecksioHelper:
                 data=data,
                 headers=self.headers,
                 method="HEAD",
-                timeout=self.timeout,
+                timeout=self.request_timeout,
             )
         return Response(resp, info)
 
@@ -184,6 +184,8 @@ class HealthchecksioHelper:
                 required=False,
                 no_log=True,
             ),
+            validate_certs=dict(type="bool", default=True),
+            request_timeout=dict(type="int", default=30),
         )
 
 
@@ -391,6 +393,8 @@ class Checks(object):
                     "ping_api_key",
                     "ping_api_base_url",
                     "ping_api_token",
+                    "validate_certs",
+                    "request_timeout",
                     "channels",
                     "tags",
                     "grace",  # API may return None, module defaults to 3600
@@ -417,6 +421,8 @@ class Checks(object):
         # uuid is not used to create or update
         request_params.pop("uuid", None)
         request_params.pop("state", None)
+        request_params.pop("validate_certs", None)
+        request_params.pop("request_timeout", None)
 
         # if schedule and tz, create a Cron check
         if request_params.get("schedule") and request_params.get("tz"):
@@ -470,6 +476,8 @@ class Checks(object):
                 "ping_api_key",
                 "ping_api_base_url",
                 "ping_api_token",
+                "validate_certs",
+                "request_timeout",
                 "channels",
                 "tags",
                 # grace: API may return None, module defaults to 3600

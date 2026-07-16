@@ -46,4 +46,18 @@ options:
       - C(HEALTHCHECKSIO_API_PING_KEY), C(HC_API_PING_KEY)
     type: str
     required: false
+  validate_certs:
+    description:
+      - Whether to validate TLS certificates for HTTPS requests.
+      - Set to V(false) when connecting to self-hosted Healthchecks.io instances that use a private or unknown CA.
+      - Disabling certificate validation reduces security and should only be used against trusted self-hosted endpoints.
+    type: bool
+    required: false
+    default: true
+  request_timeout:
+    description:
+      - HTTP request timeout in seconds for API calls.
+    type: int
+    required: false
+    default: 30
 """

@@ -26,7 +26,8 @@ jobs:
             ./tests/utils/render.sh
             tests/integration/integration_config.yml.template
             > tests/integration/integration_config.yml
-          python-version: 3.9
+          ansible-core-version: stable-2.13
+          origin-python-version: '3.9'
           target-python-version: 3.8
           testing-type: integration
           test-deps: community.general
@@ -73,7 +74,8 @@ jobs:
             [ -n "$HC_TEST_HOST" ] || HC_TEST_HOST=172.17.0.1;
             export HC_TEST_HOST;
             python3 tests/docker/render_integration_config.py
-          python-version: 3.9
+          ansible-core-version: stable-2.13
+          origin-python-version: '3.9'
           target-python-version: 3.8
           testing-type: integration
           test-deps: community.general
