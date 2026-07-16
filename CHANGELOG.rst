@@ -4,6 +4,19 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
+v1.5.2
+======
+
+Minor Changes
+-------------
+
+- Add ``validate_certs`` parameter to all modules for self-hosted instances with private CAs (https://github.com/ansible-collections/community.healthchecksio/issues/54).
+
+Bugfixes
+--------
+
+- Use ``request_timeout`` for HTTP client timeouts instead of overloading ``timeout``, which the checks module uses for check period (https://github.com/ansible-collections/community.healthchecksio/issues/54).
+
 v1.5.1
 ======
 
