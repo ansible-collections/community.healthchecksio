@@ -118,3 +118,14 @@ releases:
     fragments:
     - 34-info-get-check-mode.yml
     release_date: '2026-04-20'
+  1.5.2:
+    changes:
+      bugfixes:
+      - Use ``request_timeout`` for HTTP client timeouts instead of overloading ``timeout``,
+        which the checks module uses for check period (https://github.com/ansible-collections/community.healthchecksio/issues/54).
+      minor_changes:
+      - Add ``validate_certs`` parameter to all modules for self-hosted instances
+        with private CAs (https://github.com/ansible-collections/community.healthchecksio/issues/54).
+    fragments:
+    - 54-validate-certs-request-timeout.yaml
+    release_date: '2026-07-16'
