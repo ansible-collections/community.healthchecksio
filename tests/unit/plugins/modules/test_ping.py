@@ -10,7 +10,9 @@ except ImportError:
 from ansible_collections.community.healthchecksio.plugins.module_utils.healthchecksio import (
     Ping,
 )
-from ansible_collections.community.healthchecksio.plugins.modules import ping as ping_module
+from ansible_collections.community.healthchecksio.plugins.modules import (
+    ping as ping_module,
+)
 
 
 class ExitJson(Exception):
@@ -66,6 +68,10 @@ def test_ping_create_appends_runid_as_rid_query_param(mock_fetch_url):
     assert (
         _last_fetch_url(mock_fetch_url)
         == "https://hc-ping.com/check-uuid/start?rid=728b3763-ea80-4113-9fc0-f49b3adf226a"
+    )
+    module.exit_json.assert_called_once_with(
+        changed=True,
+        msg="Sent start signal to check-uuid/start",
     )
 
 

@@ -8,16 +8,24 @@
         - api_key is not defined
         - api_key | length == 0
 
-    - name: Create a Simple check named "simple test"
+    - name: Generate an invocation-unique run ID
+      ansible.builtin.set_fact:
+        runid: "{{ ansible_date_time.iso8601_micro | to_uuid }}"
+
+    - name: Create an invocation-unique Simple check
       community.healthchecksio.checks:
         state: present
         api_key: "{{ api_key }}"
         management_api_base_url: "{{ management_api_base_url }}"
         ping_api_base_url: "{{ ping_api_base_url }}"
-        name: simple test
+        name: "simple test {{ runid }}"
         unique: ["name"]
         timeout: 77
       register: result
+
+    - name: Set a fact for the check
+      ansible.builtin.set_fact:
+        uuid: "{{ result.uuid }}"
 
     - name: Verify integrations
       ansible.builtin.assert:
@@ -25,12 +33,8 @@
           - result.changed
           - result.data is defined
           - result.data.name is defined
-          - result.data.name == "simple test"
+          - "result.data.name == 'simple test ' + runid"
           - result.uuid is defined
-
-    - name: Set a fact for the check
-      ansible.builtin.set_fact:
-        uuid: "{{ result.uuid }}"
 
     - name: Pause for ten seconds
       ansible.builtin.pause:
@@ -90,6 +94,71 @@
           - result.msg is defined
           - "result.msg == 'Sent success signal to ' + uuid"
 
+    - name: Send start signal with a run ID
+      community.healthchecksio.ping:
+        state: present
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        ping_api_base_url: "{{ ping_api_base_url }}"
+        uuid: "{{ uuid }}"
+        signal: start
+        runid: "{{ runid }}"
+      register: result
+
+    - name: Verify start signal with a run ID
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.msg is defined
+          - "result.msg == 'Sent start signal to ' + uuid + '/start'"
+
+    - name: Send success signal with the same run ID
+      community.healthchecksio.ping:
+        state: present
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        ping_api_base_url: "{{ ping_api_base_url }}"
+        uuid: "{{ uuid }}"
+        signal: success
+        runid: "{{ runid }}"
+      register: result
+
+    - name: Verify success signal with a run ID
+      ansible.builtin.assert:
+        that:
+          - result.changed
+          - result.msg is defined
+          - "result.msg == 'Sent success signal to ' + uuid"
+
+    - name: Get ping history for the run ID
+      community.healthchecksio.checks_pings_info:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        ping_api_base_url: "{{ ping_api_base_url }}"
+        uuid: "{{ uuid }}"
+      register: ping_history
+      until:
+        - ping_history.data is defined
+        - ping_history.data.pings is defined
+        - ping_history.data.pings | length >= 2
+        - ping_history.data.pings[0].rid is defined
+        - ping_history.data.pings[0].rid == runid
+        - ping_history.data.pings[1].rid is defined
+        - ping_history.data.pings[1].rid == runid
+      retries: 5
+      delay: 2
+
+    - name: Verify the run ID links the start and success signals
+      ansible.builtin.assert:
+        that:
+          - not ping_history.changed
+          - ping_history.data.pings[0].type == "success"
+          - ping_history.data.pings[0].rid == runid
+          - ping_history.data.pings[1].type == "start"
+          - ping_history.data.pings[1].rid == runid
+          - ping_history.data.pings[0].duration is number
+
+  always:
     - name: Delete the Simple check
       community.healthchecksio.checks:
         state: absent
@@ -97,4 +166,4 @@
         management_api_base_url: "{{ management_api_base_url }}"
         ping_api_base_url: "{{ ping_api_base_url }}"
         uuid: "{{ uuid }}"
-      register: result
+      when: uuid is defined

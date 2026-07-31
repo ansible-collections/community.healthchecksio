@@ -611,10 +611,13 @@ class Ping(object):
         else:
             endpoint = "{0}/{1}".format(uuid, signal)
 
+        request_endpoint = endpoint
         if runid is not None:
-            endpoint = "{0}?rid={1}".format(endpoint, quote(runid, safe=""))
+            request_endpoint = "{0}?rid={1}".format(
+                request_endpoint, quote(runid, safe="")
+            )
 
-        response = self.rest.head(endpoint, no_headers=True)
+        response = self.rest.head(request_endpoint, no_headers=True)
         status_code = response.status_code
 
         if status_code == 200:
