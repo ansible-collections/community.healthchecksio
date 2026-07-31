@@ -4,6 +4,14 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
+v1.5.3
+======
+
+Minor Changes
+-------------
+
+- ping - add ``runid`` parameter support for Healthchecks.io run ID tracking (https://github.com/ansible-collections/community.healthchecksio/issues/58).
+
 v1.5.2
 ======
 

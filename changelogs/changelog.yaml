@@ -129,3 +129,11 @@ releases:
     fragments:
     - 54-validate-certs-request-timeout.yaml
     release_date: '2026-07-16'
+  1.5.3:
+    changes:
+      minor_changes:
+      - ping - add ``runid`` parameter support for Healthchecks.io run ID tracking
+        (https://github.com/ansible-collections/community.healthchecksio/issues/58).
+    fragments:
+    - 58-ping-runid.yml
+    release_date: '2026-07-31'
