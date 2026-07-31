@@ -34,6 +34,12 @@ options:
     type: str
     choices: ["success", "fail", "start"]
     default: success
+  runid:
+    description:
+      - Optional run ID to send in the Healthchecks.io C(rid) query parameter.
+      - Use the same run ID for matching C(start), C(success), and C(fail) pings from one job execution.
+      - Healthchecks.io requires this value to be a UUID in canonical textual representation.
+    type: str
 extends_documentation_fragment:
   - community.healthchecksio.healthchecksio.documentation
 """
@@ -56,6 +62,13 @@ EXAMPLES = r"""
     state: present
     uuid: "{{ check_uuid }}"
     signal: start
+
+- name: Send a start signal with a run ID
+  community.healthchecksio.ping:
+    state: present
+    uuid: "{{ check_uuid }}"
+    signal: start
+    runid: "{{ ansible_date_time.iso8601_micro | to_uuid }}"
 """
 
 RETURN = r"""
@@ -77,9 +90,10 @@ def run(module):
     state = module.params.pop("state")
     uuid = module.params.pop("uuid")
     signal = module.params.pop("signal")
+    runid = module.params.pop("runid")
     ping = Ping(module)
     if state == "present":
-        ping.create(uuid, signal)
+        ping.create(uuid, signal, runid)
 
 
 def main():
@@ -93,6 +107,7 @@ def main():
             required=False,
             default="success",
         ),
+        runid=dict(type="str", required=False),
     )
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 

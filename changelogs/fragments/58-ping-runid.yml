@@ -1,0 +1,2 @@
+minor_changes:
+  - ping - add ``runid`` parameter support for Healthchecks.io run ID tracking (https://github.com/ansible-collections/community.healthchecksio/issues/58).
