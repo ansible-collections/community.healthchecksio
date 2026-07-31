@@ -602,7 +602,7 @@ class Ping(object):
         self.module = module
         self.rest = HealthchecksioPingHelper(module)
 
-    def create(self, uuid, signal):
+    def create(self, uuid, signal, runid=None):
         if self.module.check_mode:
             self.module.exit_json(changed=False, data={})
 
@@ -610,6 +610,9 @@ class Ping(object):
             endpoint = "{0}".format(uuid)
         else:
             endpoint = "{0}/{1}".format(uuid, signal)
+
+        if runid is not None:
+            endpoint = "{0}?rid={1}".format(endpoint, quote(runid, safe=""))
 
         response = self.rest.head(endpoint, no_headers=True)
         status_code = response.status_code
