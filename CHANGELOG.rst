@@ -4,6 +4,14 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
+v1.5.4
+======
+
+Bugfixes
+--------
+
+- Handle invalid API error-response JSON on legacy Python versions without referencing the unavailable JSONDecodeError exception.
+
 v1.5.3
 ======
 

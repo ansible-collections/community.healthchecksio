@@ -137,3 +137,11 @@ releases:
     fragments:
     - 58-ping-runid.yml
     release_date: '2026-07-31'
+  1.5.4:
+    changes:
+      bugfixes:
+      - Handle invalid API error-response JSON on legacy Python versions without referencing
+        the unavailable JSONDecodeError exception.
+    fragments:
+    - 62-legacy-json-error.yml
+    release_date: '2026-08-01'
