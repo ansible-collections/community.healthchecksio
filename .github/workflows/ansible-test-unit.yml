@@ -32,6 +32,7 @@ jobs:
         uses: ansible-community/ansible-test-gh-action@release/v1
         with:
           ansible-core-version: ${{ matrix.ansible }}
+          coverage: always
           # pre-test-cmd:
           origin-python-version: ${{ matrix.origin-python-version }}
           # target-python-version:
