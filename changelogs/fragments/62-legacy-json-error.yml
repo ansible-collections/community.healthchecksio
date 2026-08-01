@@ -1,0 +1,4 @@
+bugfixes:
+  - >-
+    Handle invalid API error-response JSON on legacy Python versions without
+    referencing the unavailable JSONDecodeError exception.
