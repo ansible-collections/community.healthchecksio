@@ -37,3 +37,14 @@ jobs:
           origin-python-version: ${{ matrix.origin-python-version }}
           # target-python-version:
           testing-type: units
+
+      # The upstream action creates this aggregate report after its internal
+      # Codecov step checks for it, so upload the finished report explicitly.
+      - name: Upload aggregate coverage to Codecov
+        if: matrix.ansible == 'stable-2.13'
+        uses: codecov/codecov-action@v7.0.0
+        with:
+          fail_ci_if_error: true
+          files: ansible_collections/community/healthchecksio/tests/output/reports/coverage=units.xml
+          flags: units
+          verbose: true
