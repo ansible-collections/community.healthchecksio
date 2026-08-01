@@ -34,6 +34,6 @@ def test_run_ignores_unknown_state():
 def test_main_builds_check_mode_module_and_runs_it():
     module = make_module()
     ansible_module = run_main(checks_pings_info, module)
-    kwargs = ansible_module.call_args.kwargs
+    kwargs = ansible_module.call_args[1]
     assert kwargs["supports_check_mode"] is True
     assert kwargs["argument_spec"]["uuid"] == dict(type="str", required=False)

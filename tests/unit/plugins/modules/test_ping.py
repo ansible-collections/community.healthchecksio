@@ -151,7 +151,7 @@ def test_run_ignores_unknown_state():
 def test_main_builds_ping_arguments_and_runs_module():
     module = _make_module()
     ansible_module = run_main(ping_module, module)
-    kwargs = ansible_module.call_args.kwargs
+    kwargs = ansible_module.call_args[1]
     assert kwargs["supports_check_mode"] is True
     assert kwargs["argument_spec"]["uuid"] == dict(type="str", required=True)
     assert kwargs["argument_spec"]["signal"]["choices"] == [

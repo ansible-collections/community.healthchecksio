@@ -40,7 +40,7 @@ def test_run_ignores_unknown_state():
 def test_main_builds_state_constraints_and_runs_module():
     module = make_module()
     ansible_module = run_main(checks, module)
-    kwargs = ansible_module.call_args.kwargs
+    kwargs = ansible_module.call_args[1]
     assert kwargs["supports_check_mode"] is True
     assert kwargs["required_if"] == [
         ("state", "absent", ["uuid"]),

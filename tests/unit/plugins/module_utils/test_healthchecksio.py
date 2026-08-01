@@ -76,7 +76,7 @@ def service(cls, mod=None):
 
 def result_kwargs(mod):
     call = mod.fail_json.call_args if mod.fail_json.called else mod.exit_json.call_args
-    return call.kwargs
+    return call[1]
 
 
 def fetch_success():
@@ -116,8 +116,8 @@ def test_helper_initializes_and_forwards_connection_settings(fetch):
     mod = module(validate_certs=False, request_timeout=45, timeout=90)
     helper = HealthchecksioHelper(mod)
     helper.get("checks")
-    kwargs = fetch.call_args.kwargs
-    assert fetch.call_args.args[0] is mod
+    kwargs = fetch.call_args[1]
+    assert fetch.call_args[0][0] is mod
     assert kwargs["timeout"] == 45
     assert kwargs["headers"] == {"X-Api-Key": "token"}
     assert "validate_certs" not in kwargs
@@ -149,8 +149,8 @@ def test_helper_dispatches_methods(fetch, name, method):
     mod.jsonify.side_effect = lambda value: '{"name":"x"}'
     helper = HealthchecksioHelper(mod)
     getattr(helper, name)("checks", {"name": "x"})
-    assert fetch.call_args.kwargs["method"] == method
-    assert fetch.call_args.kwargs["data"] == '{"name":"x"}'
+    assert fetch.call_args[1]["method"] == method
+    assert fetch.call_args[1]["data"] == '{"name":"x"}'
 
 
 @patch(PATH + ".fetch_url", side_effect=lambda *args, **kwargs: fetch_success())
@@ -159,7 +159,7 @@ def test_helper_delete_omits_null_body(fetch):
     mod.jsonify.return_value = "null"
     helper = HealthchecksioHelper(mod)
     helper.delete("checks/id")
-    assert fetch.call_args.kwargs["data"] is None
+    assert fetch.call_args[1]["data"] is None
 
 
 @pytest.mark.parametrize("no_headers", [False, True])
@@ -167,7 +167,7 @@ def test_helper_delete_omits_null_body(fetch):
 def test_helper_head_headers(fetch, no_headers):
     helper = HealthchecksioHelper(module())
     helper.head("id", data=b"x", no_headers=no_headers)
-    kwargs = fetch.call_args.kwargs
+    kwargs = fetch.call_args[1]
     assert kwargs["method"] == "HEAD"
     assert kwargs["data"] == b"x"
     assert ("headers" not in kwargs) is no_headers
@@ -419,7 +419,7 @@ def test_create_simple_payload():
     obj.rest.post.return_value = response(201, existing())
     with pytest.raises(ExitJson) as exc:
         obj.create()
-    payload = obj.rest.post.call_args.kwargs["data"]
+    payload = obj.rest.post.call_args[1]["data"]
     assert payload["tags"] == "prod web"
     assert payload["timeout"] == 60
     for key in ("schedule", "tz", "uuid", "state", "validate_certs", "request_timeout"):
@@ -433,7 +433,7 @@ def test_create_cron_payload():
     obj.rest.post.return_value = response(201, existing())
     with pytest.raises(ExitJson):
         obj.create()
-    payload = obj.rest.post.call_args.kwargs["data"]
+    payload = obj.rest.post.call_args[1]["data"]
     assert payload["schedule"] == "0 1 * * *"
     assert "timeout" not in payload
 
