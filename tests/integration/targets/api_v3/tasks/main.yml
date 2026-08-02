@@ -1,0 +1,185 @@
+---
+- name: Exercise Management API v3 and Pinging API coverage
+  block:
+    - name: Ensure API key is provided
+      ansible.builtin.fail:
+        msg: api_key needs to be defined in tests/integration/integration_config.yml
+      when: api_key is not defined or api_key | length == 0
+
+    - name: Verify service database connectivity
+      community.healthchecksio.status_info:
+        management_api_base_url: "{{ management_api_base_url }}"
+      register: service_status
+
+    - name: Generate invocation-unique identifiers
+      ansible.builtin.set_fact:
+        api_v3_runid: "{{ ansible_date_time.iso8601_micro | to_uuid }}"
+
+    - name: Create a check with the complete v3 configuration surface
+      community.healthchecksio.checks:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        name: "API v3 {{ api_v3_runid }}"
+        slug: "api-v3-{{ api_v3_runid }}"
+        unique: [slug]
+        tags: [api-v3, integration]
+        desc: Initial API v3 description
+        timeout: 120
+        grace: 60
+        manual_resume: true
+        methods: POST
+        start_kw: STARTED
+        success_kw: COMPLETE
+        failure_kw: ERROR
+        filter_http_body: true
+        filter_default_fail: true
+      register: api_v3_check
+
+    - name: Record the v3 check UUID
+      ansible.builtin.set_fact:
+        api_v3_uuid: "{{ api_v3_check.uuid }}"
+
+    - name: Verify v3 create response fields
+      ansible.builtin.assert:
+        that:
+          - service_status.status == "ok"
+          - api_v3_check.changed
+          - api_v3_check.data.slug == "api-v3-" + api_v3_runid
+          - api_v3_check.data.tags == "api-v3 integration"
+          - api_v3_check.data.manual_resume
+          - api_v3_check.data.methods == "POST"
+          - api_v3_check.data.filter_http_body
+          - api_v3_check.data.filter_default_fail
+
+    - name: Find the check by v3 slug filter
+      community.healthchecksio.checks_info:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        slug: "api-v3-{{ api_v3_runid }}"
+      register: slug_lookup
+
+    - name: Verify slug lookup
+      ansible.builtin.assert:
+        that:
+          - not slug_lookup.changed
+          - slug_lookup.data.checks | length == 1
+          - slug_lookup.data.checks[0].uuid == api_v3_uuid
+
+    - name: Explicitly update the check by UUID
+      community.healthchecksio.checks:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        state: present
+        uuid: "{{ api_v3_uuid }}"
+        desc: Updated through the explicit v3 endpoint
+      register: explicit_update
+
+    - name: Repeat explicit update for idempotency
+      community.healthchecksio.checks:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        state: present
+        uuid: "{{ api_v3_uuid }}"
+        desc: Updated through the explicit v3 endpoint
+      register: explicit_update_again
+
+    - name: Pause and resume the check
+      community.healthchecksio.checks:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        state: pause
+        uuid: "{{ api_v3_uuid }}"
+      register: pause_result
+
+    - name: Resume the manually paused check
+      community.healthchecksio.checks:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        state: resume
+        uuid: "{{ api_v3_uuid }}"
+      register: resume_result
+
+    - name: Verify update, idempotency, pause, and resume
+      ansible.builtin.assert:
+        that:
+          - explicit_update.changed
+          - explicit_update.data.desc == "Updated through the explicit v3 endpoint"
+          - not explicit_update_again.changed
+          - pause_result.changed
+          - resume_result.changed
+
+    - name: Send a log event with a diagnostic body
+      community.healthchecksio.ping:
+        ping_api_base_url: "{{ ping_api_base_url }}"
+        uuid: "{{ api_v3_uuid }}"
+        signal: log
+        body: "api-v3-body-{{ api_v3_runid }}"
+      register: log_ping
+
+    - name: Wait for the logged body to appear in ping history
+      community.healthchecksio.checks_pings_info:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        uuid: "{{ api_v3_uuid }}"
+      register: api_v3_history
+      until:
+        - api_v3_history.data.pings | length > 0
+        - api_v3_history.data.pings[0].body_url is not none
+      retries: 10
+      delay: 2
+
+    - name: Retrieve the stored ping body
+      community.healthchecksio.checks_ping_body_info:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        uuid: "{{ api_v3_uuid }}"
+        sequence: "{{ api_v3_history.data.pings[0].n }}"
+      register: stored_body
+
+    - name: Report a successful process exit status
+      community.healthchecksio.ping:
+        ping_api_base_url: "{{ ping_api_base_url }}"
+        uuid: "{{ api_v3_uuid }}"
+        exit_status: 0
+        method: POST
+      register: exit_status_ping
+
+    - name: Query recent status flips
+      community.healthchecksio.checks_flips_info:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        uuid: "{{ api_v3_uuid }}"
+        seconds: 3600
+      register: recent_flips
+
+    - name: Verify ping body, exit status, and flip filtering
+      ansible.builtin.assert:
+        that:
+          - log_ping.changed
+          - stored_body.data == "api-v3-body-" + api_v3_runid
+          - exit_status_ping.changed
+          - recent_flips.data.flips is defined
+
+    - name: Ping by project key and slug
+      community.healthchecksio.ping:
+        ping_api_base_url: "{{ ping_api_base_url }}"
+        ping_api_token: "{{ ping_api_token }}"
+        slug: "api-v3-{{ api_v3_runid }}"
+        signal: success
+        method: POST
+      register: slug_ping
+      when: ping_api_token | default("", true) | length > 0
+
+    - name: Verify slug ping
+      ansible.builtin.assert:
+        that: slug_ping.changed
+      when: ping_api_token | default("", true) | length > 0
+
+  always:
+    - name: Delete the v3 integration check
+      community.healthchecksio.checks:
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        state: absent
+        uuid: "{{ api_v3_uuid }}"
+      when: api_v3_uuid is defined

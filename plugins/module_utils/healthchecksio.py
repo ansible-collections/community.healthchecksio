@@ -13,8 +13,13 @@ try:
 except ImportError:
     from urllib import quote
 from ansible.module_utils.urls import fetch_url
-from ansible.module_utils.common.text.converters import to_text
+from ansible.module_utils.common.text.converters import to_bytes, to_text
 from ansible.module_utils.basic import env_fallback
+
+DEFAULT_REQUEST_TIMEOUT = 30
+DEFAULT_PING_SIGNAL = "success"
+DEFAULT_PING_METHOD = "HEAD"
+DEFAULT_PING_CREATE = False
 
 
 class Response(object):
@@ -40,20 +45,29 @@ class Response(object):
             return None
 
     @property
+    def text(self):
+        if self.body is not None:
+            return to_text(self.body)
+        if "body" in self.info:
+            return to_text(self.info["body"])
+        return None
+
+    @property
     def status_code(self):
         return self.info["status"]
 
 
 class HealthchecksioHelper:
-    def __init__(self, module):
+    def __init__(self, module, authenticate=True):
         self.module = module
         self.base_url = self._get_base_url(module)
         self.api_token = self._get_api_token(module)
-        self.request_timeout = module.params.get("request_timeout", 30)
-        self.headers = {"X-Api-Key": self.api_token}
+        self.request_timeout = module.params.get(
+            "request_timeout", DEFAULT_REQUEST_TIMEOUT
+        )
+        self.headers = {"X-Api-Key": self.api_token} if self.api_token else {}
 
-        response = self.get("checks")
-        if response.status_code == 401:
+        if authenticate and self.get("checks").status_code == 401:
             self.module.fail_json(
                 msg="Failed to login using API token against {0}".format(self.base_url)
             )
@@ -71,11 +85,8 @@ class HealthchecksioHelper:
 
     def send(self, method, path, data=None):
         url = self._url_builder(path)
-        data = self.module.jsonify(data)
-
-        if method == "DELETE":
-            if data == "null":
-                data = None
+        if data is not None:
+            data = self.module.jsonify(data)
 
         resp, info = fetch_url(
             self.module,
@@ -99,27 +110,6 @@ class HealthchecksioHelper:
 
     def delete(self, path, data=None):
         return self.send("DELETE", path, data)
-
-    def head(self, path, data=None, no_headers=False):
-        uri = "{0}/{1}".format(self.base_url, path)
-        if no_headers is True:
-            resp, info = fetch_url(
-                self.module,
-                uri,
-                data=data,
-                method="HEAD",
-                timeout=self.request_timeout,
-            )
-        else:
-            resp, info = fetch_url(
-                self.module,
-                uri,
-                data=data,
-                headers=self.headers,
-                method="HEAD",
-                timeout=self.request_timeout,
-            )
-        return Response(resp, info)
 
     @staticmethod
     def healthchecksio_argument_spec():
@@ -157,7 +147,7 @@ class HealthchecksioHelper:
                 ),
                 required=False,
                 no_log=False,
-                default="https://healthchecks.io/api/v1",
+                default="https://healthchecks.io/api/v3",
             ),
             ping_api_base_url=dict(
                 type="str",
@@ -185,19 +175,33 @@ class HealthchecksioHelper:
                 no_log=True,
             ),
             validate_certs=dict(type="bool", default=True),
-            request_timeout=dict(type="int", default=30),
+            request_timeout=dict(type="int", default=DEFAULT_REQUEST_TIMEOUT),
         )
 
 
 class HealthchecksioPingHelper(HealthchecksioHelper):
+    def __init__(self, module):
+        super(HealthchecksioPingHelper, self).__init__(module, authenticate=False)
+
     def _get_api_token(self, module):
-        # We can use the management API token instead of the ping token
-        if module.params.get("ping_api_token") != "":
-            return module.params.get("ping_api_token")
-        return module.params.get("management_api_token")
+        return module.params.get("ping_api_token")
 
     def _get_base_url(self, module):
         return module.params.get("ping_api_base_url")
+
+    def ping(self, method, path, data=None):
+        if data is not None:
+            data = to_bytes(data)
+        headers = {"Content-Type": "text/plain; charset=utf-8"} if data else None
+        resp, info = fetch_url(
+            self.module,
+            self._url_builder(path),
+            data=data,
+            headers=headers,
+            method=method,
+            timeout=self.request_timeout,
+        )
+        return Response(resp, info)
 
 
 class BadgesInfo(object):
@@ -256,8 +260,17 @@ class ChecksFlipsInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        uuid = self.module.params.get("uuid", None)
-        endpoint = "checks/{0}/flips".format(uuid)
+        identifier = self.module.params.get("unique_key") or self.module.params.get(
+            "uuid"
+        )
+        endpoint = "checks/{0}/flips".format(identifier)
+        query = []
+        for name in ("seconds", "start", "end"):
+            value = self.module.params.get(name)
+            if value is not None:
+                query.append("{0}={1}".format(name, value))
+        if query:
+            endpoint += "?" + "&".join(query)
 
         response = self.rest.get(endpoint)
         json_data = response.json
@@ -278,23 +291,21 @@ class ChecksInfo(object):
         self.rest = HealthchecksioHelper(module)
 
     def get(self):
-        endpoint = "checks"
+        identifier = self.module.params.get("unique_key") or self.module.params.get(
+            "uuid"
+        )
+        endpoint = "checks/{0}".format(identifier) if identifier else "checks"
 
-        tags = self.module.params.get("tags", None)
-        if tags is not None:
-            tags = ["tag=" + tag for tag in tags]
-            tags = "&".join(tags)
-            if tags:
-                endpoint += "?" + tags
-
-        uuid = self.module.params.get("uuid", None)
-        if uuid is not None:
-            endpoint += "/" + uuid
-
-        name = self.module.params.get("name", None)
-        if name is not None:
-            separator = "&" if "?" in endpoint else "?"
-            endpoint += separator + "name=" + quote(name, safe="")
+        if not identifier:
+            query = []
+            for tag in self.module.params.get("tags") or []:
+                query.append("tag=" + quote(tag, safe=""))
+            for name in ("slug", "name"):
+                value = self.module.params.get(name)
+                if value is not None:
+                    query.append("{0}={1}".format(name, quote(value, safe="")))
+            if query:
+                endpoint += "?" + "&".join(query)
 
         response = self.rest.get(endpoint)
         json_data = response.json
@@ -335,12 +346,54 @@ class ChecksPingsInfo(object):
         self.module.exit_json(changed=False, data=json_data)
 
 
+class ChecksPingBodyInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module)
+
+    def get(self):
+        uuid = self.module.params.get("uuid")
+        sequence = self.module.params.get("sequence")
+        endpoint = "checks/{0}/pings/{1}/body".format(uuid, sequence)
+        response = self.rest.get(endpoint)
+
+        if response.status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to get {0} [HTTP {1}]".format(
+                    endpoint, response.status_code
+                ),
+            )
+
+        self.module.exit_json(changed=False, data=response.text)
+
+
+class StatusInfo(object):
+    def __init__(self, module):
+        self.module = module
+        self.rest = HealthchecksioHelper(module, authenticate=False)
+
+    def get(self):
+        response = self.rest.get("status/")
+        if response.status_code != 200:
+            self.module.fail_json(
+                changed=False,
+                msg="Healthchecks.io service status check failed [HTTP {0}]".format(
+                    response.status_code
+                ),
+            )
+        self.module.exit_json(changed=False, status="ok")
+
+
 class Checks(object):
     def __init__(self, module):
         self.module = module
         self.rest = HealthchecksioHelper(module)
 
     def get_uuid(self, json_data):
+        uuid = json_data.get("uuid")
+        if uuid:
+            return uuid
         ping_url = json_data.get("ping_url", None)
         if ping_url is not None:
             uuid = ping_url.split("/")[-1]
@@ -351,157 +404,120 @@ class Checks(object):
         else:
             return "(unable to determine uuid)"
 
+    def _resolve_channels(self, request_params):
+        channels_param = request_params.get("channels")
+        cache = getattr(self, "_resolved_channels", {})
+        if channels_param not in cache:
+            if channels_param == "*":
+                channels = self.rest.get("channels").json.get("channels", [])
+                cache[channels_param] = ",".join(channel["id"] for channel in channels)
+            else:
+                cache[channels_param] = channels_param
+            self._resolved_channels = cache
+        return cache[channels_param]
+
+    def _matches(self, check, request_params):
+        skip = set(["unique", "channels", "tags"])
+        params_match = all(
+            check.get(key) == value
+            for key, value in request_params.items()
+            if key not in skip
+        )
+        if not params_match:
+            return False
+
+        if "channels" in request_params:
+            expected = self._resolve_channels(request_params) or ""
+            actual = check.get("channels", "")
+            if sorted(actual.split(",")) != sorted(expected.split(",")):
+                return False
+
+        if "tags" in request_params and check.get("tags", "") != request_params["tags"]:
+            return False
+
+        return True
+
     def _find_existing_check(self, request_params):
-        # Build the tags string as the API does
-        tags = self.module.params.get("tags", [])
-        tags_str = " ".join(tags)
+        unique = request_params.get("unique", [])
+        if not unique:
+            return None
 
         checks = self.rest.get("checks").json["checks"]
-        unique = request_params.get("unique", [])
-        c = [
+        matches = [
             check
             for check in checks
-            if all(check.get(k) == request_params.get(k) for k in unique)
+            if all(check.get(key) == request_params.get(key) for key in unique)
         ]
 
-        if len(c) > 1 and len(unique) != 0:
+        if len(matches) > 1 and unique:
             self.module.fail_json(
                 changed=False,
                 msg="Expected to find one check matching unique parameters, {0} found".format(
-                    len(c)
+                    len(matches)
                 ),
             )
 
-        # Resolve "*" channels to actual channel IDs
-        channels_param = request_params.get("channels", "")
-        if channels_param == "*":
-            channels = self.rest.get("channels").json.get("channels", [])
-            channels_ids = [ch["id"] for ch in channels]
-            channels_str = ",".join(channels_ids)
-        else:
-            channels_str = channels_param
-
-        if len(c) == 1:
-            # Check if params match (excluding unique/api_key/channels/grace)
-            skip = set(
-                [
-                    "unique",
-                    "api_key",
-                    "management_api_key",
-                    "management_api_token",
-                    "management_api_base_url",
-                    "ping_api_key",
-                    "ping_api_base_url",
-                    "ping_api_token",
-                    "validate_certs",
-                    "request_timeout",
-                    "channels",
-                    "tags",
-                    "grace",  # API may return None, module defaults to 3600
-                ]
-            )
-            params_match = all(
-                c[0].get(k) == request_params.get(k)
-                for k in request_params
-                if k not in skip
-            )
-            channels_match = sorted(c[0].get("channels", "").split(",")) == sorted(
-                channels_str.split(",")
-            )
-            tags_match = c[0].get("tags", "") == tags_str
-            if params_match and channels_match and tags_match:
-                return c[0]
+        if len(matches) == 1 and self._matches(matches[0], request_params):
+            return matches[0]
         return None
 
     def create(self):
-        endpoint = "checks/"
+        uuid = self.module.params.get("uuid")
+        endpoint = "checks/{0}".format(uuid) if uuid else "checks/"
 
         request_params = dict(self.module.params)
 
-        # uuid is not used to create or update
-        request_params.pop("uuid", None)
-        request_params.pop("state", None)
-        request_params.pop("validate_certs", None)
-        request_params.pop("request_timeout", None)
+        for key in (
+            "uuid",
+            "state",
+            "api_key",
+            "management_api_key",
+            "management_api_token",
+            "management_api_base_url",
+            "ping_api_token",
+            "ping_api_base_url",
+            "validate_certs",
+            "request_timeout",
+        ):
+            request_params.pop(key, None)
+        request_params = dict(
+            (key, value) for key, value in request_params.items() if value is not None
+        )
 
-        # if schedule and tz, create a Cron check
-        if request_params.get("schedule") and request_params.get("tz"):
-            del request_params["timeout"]
+        if uuid:
+            request_params.pop("unique", None)
 
-        # if timeout, create a Simple check
-        if request_params.get("timeout"):
-            del request_params["schedule"]
-            del request_params["tz"]
+        if request_params.get("schedule"):
+            request_params.pop("timeout", None)
+        elif request_params.get("timeout"):
+            request_params.pop("schedule", None)
+            request_params.pop("tz", None)
 
-        tags = self.module.params.get("tags", [])
-        request_params["tags"] = " ".join(tags)
+        if "tags" in request_params:
+            request_params["tags"] = " ".join(request_params["tags"])
 
-        # Look up existing check for idempotency
-        existing = self._find_existing_check(request_params)
-
+        # Look up existing check for idempotency. UUID selects the explicit
+        # update endpoint; otherwise the API's upsert fields identify a check.
+        if uuid:
+            response = self.rest.get("checks/{0}".format(uuid))
+            existing = response.json if response.status_code == 200 else None
+            matches = existing is not None and self._matches(existing, request_params)
+        else:
+            existing = self._find_existing_check(request_params)
+            matches = existing is not None
         if self.module.check_mode:
-            if existing is not None:
-                self.module.exit_json(
-                    changed=False,
-                    data=existing,
-                    uuid=self.get_uuid(existing),
-                )
-            else:
-                self.module.exit_json(
-                    changed=True,
-                    data={},
-                    uuid="",
-                )
-
-        if existing is not None:
-            # Extract "*" channels for comparison
-            channels_param = request_params.get("channels", "")
-            if channels_param == "*":
-                channels = self.rest.get("channels").json.get("channels", [])
-                channels_ids = [ch["id"] for ch in channels]
-                channels_str = ",".join(channels_ids)
-            else:
-                channels_str = channels_param
-
-            before = existing
-            channels_match = sorted(before.get("channels", "").split(",")) == sorted(
-                channels_str.split(",")
+            self.module.exit_json(
+                changed=not matches,
+                data=existing if matches else {},
+                uuid=self.get_uuid(existing) if matches else "",
             )
-            skip_idempotency_params = [
-                "unique",
-                "api_key",
-                "management_api_key",
-                "management_api_token",
-                "management_api_base_url",
-                "ping_api_key",
-                "ping_api_base_url",
-                "ping_api_token",
-                "validate_certs",
-                "request_timeout",
-                "channels",
-                "tags",
-                # grace: API may return None, module defaults to 3600
-                "grace",
-                # desc: API returns "", module params has None (no default in spec)
-                "desc",
-            ]
-            params_match = all(
-                before.get(k) == request_params.get(k)
-                for k in request_params
-                if k not in skip_idempotency_params
+
+        if matches:
+            self.module.exit_json(
+                changed=False,
+                data=existing,
+                uuid=self.get_uuid(existing),
             )
-            tags_match = before.get("tags", "") == request_params.get("tags")
-            if params_match and channels_match and tags_match:
-                diff = (
-                    dict(before=before, after=before)
-                    if getattr(self.module, "diff_mode", False)
-                    else None
-                )
-                self.module.exit_json(
-                    changed=False,
-                    data=before,
-                    uuid=self.get_uuid(before),
-                )
 
         response = self.rest.post(endpoint, data=request_params)
         json_data = response.json
@@ -509,12 +525,6 @@ class Checks(object):
 
         if status_code == 200:
             uuid = self.get_uuid(json_data)
-            after = json_data
-            diff = (
-                dict(before=existing, after=after)
-                if getattr(self.module, "diff_mode", False)
-                else None
-            )
             self.module.exit_json(
                 changed=True,
                 msg="Existing check {0} found and updated".format(uuid),
@@ -524,11 +534,6 @@ class Checks(object):
 
         elif status_code == 201:
             uuid = self.get_uuid(json_data)
-            diff = (
-                dict(before={}, after=json_data)
-                if getattr(self.module, "diff_mode", False)
-                else None
-            )
             self.module.exit_json(
                 changed=True,
                 msg="New check {0} created".format(uuid),
@@ -596,39 +601,86 @@ class Checks(object):
                 msg="Failed to pause check {0} [HTTP {1}]".format(uuid, status_code),
             )
 
+    def resume(self):
+        uuid = self.module.params.get("uuid")
+        endpoint = "checks/{0}/resume".format(uuid)
+
+        if self.module.check_mode:
+            self.module.exit_json(
+                changed=True,
+                msg="Check {0} would be resumed".format(uuid),
+                uuid=uuid,
+            )
+
+        response = self.rest.post(endpoint)
+        status_code = response.status_code
+
+        if status_code == 200:
+            self.module.exit_json(
+                changed=True, msg="Check {0} successfully resumed".format(uuid)
+            )
+        elif status_code == 404:
+            self.module.exit_json(changed=False, msg="Check {0} not found".format(uuid))
+        elif status_code == 409:
+            self.module.exit_json(
+                changed=False, msg="Check {0} is not paused".format(uuid)
+            )
+        else:
+            self.module.fail_json(
+                changed=False,
+                msg="Failed to resume check {0} [HTTP {1}]".format(uuid, status_code),
+            )
+
 
 class Ping(object):
     def __init__(self, module):
         self.module = module
         self.rest = HealthchecksioPingHelper(module)
 
-    def create(self, uuid, signal, runid=None):
+    def create(
+        self,
+        uuid=None,
+        signal=DEFAULT_PING_SIGNAL,
+        runid=None,
+        slug=None,
+        body=None,
+        method=DEFAULT_PING_METHOD,
+        create=DEFAULT_PING_CREATE,
+        exit_status=None,
+    ):
         if self.module.check_mode:
             self.module.exit_json(changed=False, data={})
 
-        if signal == "success":
+        target = slug if slug is not None else uuid
+        if slug is not None:
+            endpoint = "{0}/{1}".format(self.rest.api_token, slug)
+        else:
             endpoint = "{0}".format(uuid)
-        else:
-            endpoint = "{0}/{1}".format(uuid, signal)
 
-        request_endpoint = endpoint
+        event = str(exit_status) if exit_status is not None else signal
+        if event != "success":
+            endpoint = "{0}/{1}".format(endpoint, event)
+
+        query = []
         if runid is not None:
-            request_endpoint = "{0}?rid={1}".format(
-                request_endpoint, quote(runid, safe="")
-            )
+            query.append("rid={0}".format(quote(runid, safe="")))
+        if create:
+            query.append("create=1")
+        request_endpoint = endpoint
+        if query:
+            request_endpoint = "{0}?{1}".format(endpoint, "&".join(query))
 
-        response = self.rest.head(request_endpoint, no_headers=True)
-        status_code = response.status_code
+        if body is not None and method == "HEAD":
+            method = "POST"
+        response = self.rest.ping(method, request_endpoint, data=body)
 
-        if status_code == 200:
+        if response.status_code in (200, 201):
             self.module.exit_json(
-                changed=True, msg="Sent {0} signal to {1}".format(signal, endpoint)
+                changed=True, msg="Sent {0} signal to {1}".format(event, target)
             )
-
-        else:
-            self.module.fail_json(
-                changed=False,
-                msg="Failed to send {0} signal to {1} [HTTP {2}]".format(
-                    signal, endpoint, status_code
-                ),
-            )
+        self.module.fail_json(
+            changed=False,
+            msg="Failed to send {0} signal to {1} [HTTP {2}]".format(
+                event, target, response.status_code
+            ),
+        )

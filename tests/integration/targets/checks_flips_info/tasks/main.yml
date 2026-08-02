@@ -48,7 +48,7 @@
         that:
           - not result.changed
           - result.data is defined
-          - result.data.flips is defined
+          - result.data is iterable
 
     - name: Pause for ten seconds
       ansible.builtin.pause:

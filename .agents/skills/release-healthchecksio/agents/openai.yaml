@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Healthchecks.io"
+  short_description: "Merge, publish, and verify collection releases"
+  default_prompt: "Use $release-healthchecksio to merge the ready PR, publish the collection release, verify Galaxy, and complete the post-release bump."

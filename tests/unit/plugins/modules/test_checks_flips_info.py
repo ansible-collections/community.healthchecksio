@@ -37,3 +37,8 @@ def test_main_builds_check_mode_module_and_runs_it():
     kwargs = ansible_module.call_args[1]
     assert kwargs["supports_check_mode"] is True
     assert kwargs["argument_spec"]["uuid"] == dict(type="str", required=False)
+    assert kwargs["required_one_of"] == [("uuid", "unique_key")]
+    assert ("seconds", "start") in kwargs["mutually_exclusive"]
+    assert set(("unique_key", "seconds", "start", "end")) <= set(
+        kwargs["argument_spec"]
+    )

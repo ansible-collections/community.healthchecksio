@@ -13,7 +13,7 @@ DOCUMENTATION = r"""
 module: checks_info
 short_description: Get a list of checks
 description:
-  - Returns a list of checks belonging to the user, optionally filtered by one or more tags.
+  - Returns checks, optionally filtered by slug or one or more tags.
 author: "Mark Mercado (@mamercad)"
 version_added: 0.1.0
 options:
@@ -31,7 +31,17 @@ options:
     required: false
   uuid:
     description:
-      - If specified, returns this specific check.
+      - If specified, returns this specific check by UUID.
+    type: str
+    required: false
+  unique_key:
+    description:
+      - If specified, returns a specific check by the stable identifier from read-only API responses.
+    type: str
+    required: false
+  slug:
+    description:
+      - Filters checks by their exact slug.
     type: str
     required: false
   name:
@@ -45,6 +55,13 @@ extends_documentation_fragment:
 """
 
 EXAMPLES = r"""
+- name: Get all checks tagged production
+  community.healthchecksio.checks_info:
+    tags: [production]
+
+- name: Get a check using a read-only API key identifier
+  community.healthchecksio.checks_info:
+    unique_key: "{{ check_unique_key }}"
 """
 
 RETURN = r"""
@@ -71,12 +88,22 @@ def main():
         state=dict(type="str", choices=["present"], default="present"),
         tags=dict(type="list", elements="str", required=False),
         uuid=dict(type="str", required=False),
+        unique_key=dict(type="str", required=False, no_log=False),
+        slug=dict(type="str", required=False),
         name=dict(type="str", required=False),
     )
     module = AnsibleModule(
         argument_spec=argument_spec,
         supports_check_mode=True,
-        mutually_exclusive=[("tags", "uuid"), ("name", "uuid")],
+        mutually_exclusive=[
+            ("uuid", "unique_key"),
+            ("uuid", "tags"),
+            ("uuid", "slug"),
+            ("uuid", "name"),
+            ("unique_key", "tags"),
+            ("unique_key", "slug"),
+            ("unique_key", "name"),
+        ],
     )
 
     run(module)

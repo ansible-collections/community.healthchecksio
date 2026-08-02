@@ -34,5 +34,8 @@ def test_main_builds_filters_and_runs_module():
     ansible_module = run_main(checks_info, module)
     kwargs = ansible_module.call_args[1]
     assert kwargs["supports_check_mode"] is True
-    assert kwargs["mutually_exclusive"] == [("tags", "uuid"), ("name", "uuid")]
-    assert set(("tags", "uuid", "name")) <= set(kwargs["argument_spec"])
+    assert ("uuid", "unique_key") in kwargs["mutually_exclusive"]
+    assert ("uuid", "slug") in kwargs["mutually_exclusive"]
+    assert set(("tags", "uuid", "unique_key", "slug", "name")) <= set(
+        kwargs["argument_spec"]
+    )

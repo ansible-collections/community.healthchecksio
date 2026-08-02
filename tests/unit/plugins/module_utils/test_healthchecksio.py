@@ -15,10 +15,12 @@ from ansible_collections.community.healthchecksio.plugins.module_utils.healthche
     Checks,
     ChecksFlipsInfo,
     ChecksInfo,
+    ChecksPingBodyInfo,
     ChecksPingsInfo,
     HealthchecksioHelper,
     HealthchecksioPingHelper,
     Response,
+    StatusInfo,
 )
 
 
@@ -45,7 +47,7 @@ def module(**overrides):
     params = dict(
         state="present",
         management_api_token="token",
-        management_api_base_url="https://healthchecks.io/api/v1",
+        management_api_base_url="https://healthchecks.io/api/v3",
         ping_api_base_url="https://hc-ping.com",
         ping_api_token=None,
         validate_certs=True,
@@ -137,8 +139,8 @@ def test_helper_rejects_invalid_token(fetch):
 @patch(PATH + ".fetch_url", side_effect=lambda *args, **kwargs: fetch_success())
 def test_helper_builds_urls(fetch):
     helper = HealthchecksioHelper(module())
-    assert helper._url_builder("checks") == "https://healthchecks.io/api/v1/checks"
-    assert helper._url_builder("/checks") == "https://healthchecks.io/api/v1/checks"
+    assert helper._url_builder("checks") == "https://healthchecks.io/api/v3/checks"
+    assert helper._url_builder("/checks") == "https://healthchecks.io/api/v3/checks"
 
 
 @pytest.mark.parametrize(
@@ -156,23 +158,12 @@ def test_helper_dispatches_methods(fetch, name, method):
 
 
 @patch(PATH + ".fetch_url", side_effect=lambda *args, **kwargs: fetch_success())
-def test_helper_delete_omits_null_body(fetch):
+def test_helper_delete_omits_body(fetch):
     mod = module()
-    mod.jsonify.return_value = "null"
     helper = HealthchecksioHelper(mod)
     helper.delete("checks/id")
     assert fetch.call_args[1]["data"] is None
-
-
-@pytest.mark.parametrize("no_headers", [False, True])
-@patch(PATH + ".fetch_url", side_effect=lambda *args, **kwargs: fetch_success())
-def test_helper_head_headers(fetch, no_headers):
-    helper = HealthchecksioHelper(module())
-    helper.head("id", data=b"x", no_headers=no_headers)
-    kwargs = fetch.call_args[1]
-    assert kwargs["method"] == "HEAD"
-    assert kwargs["data"] == b"x"
-    assert ("headers" not in kwargs) is no_headers
+    mod.jsonify.assert_not_called()
 
 
 def test_argument_spec():
@@ -180,7 +171,7 @@ def test_argument_spec():
     assert spec["state"]["choices"] == ["present", "absent"]
     assert spec["management_api_token"]["no_log"] is True
     assert (
-        spec["management_api_base_url"]["default"] == "https://healthchecks.io/api/v1"
+        spec["management_api_base_url"]["default"] == "https://healthchecks.io/api/v3"
     )
     assert spec["ping_api_base_url"]["default"] == "https://hc-ping.com"
     assert spec["validate_certs"]["default"] is True
@@ -188,7 +179,7 @@ def test_argument_spec():
 
 
 @pytest.mark.parametrize(
-    "ping_token,expected", [("ping", "ping"), ("", "token"), (None, None)]
+    "ping_token,expected", [("ping", "ping"), ("", ""), (None, None)]
 )
 def test_ping_helper_settings(ping_token, expected):
     helper = HealthchecksioPingHelper.__new__(HealthchecksioPingHelper)
@@ -247,6 +238,8 @@ def test_check_events(cls, suffix, status, exception):
         ({"tags": []}, "checks"),
         ({"tags": ["prod", "web"]}, "checks?tag=prod&tag=web"),
         ({"uuid": "abc"}, "checks/abc"),
+        ({"unique_key": "readonly"}, "checks/readonly"),
+        ({"slug": "nightly/job"}, "checks?slug=nightly%2Fjob"),
         ({"name": "nightly job"}, "checks?name=nightly%20job"),
         ({"tags": ["prod"], "name": "a/b"}, "checks?tag=prod&name=a%2Fb"),
     ],
@@ -296,7 +289,7 @@ def check_params(**overrides):
         validate_certs=True,
         request_timeout=30,
         management_api_token="token",
-        management_api_base_url="https://healthchecks.io/api/v1",
+        management_api_base_url="https://healthchecks.io/api/v3",
         ping_api_token=None,
         ping_api_base_url="https://hc-ping.com",
     )
@@ -313,6 +306,7 @@ def existing(**overrides):
         tz=None,
         channels="email,slack",
         tags="prod web",
+        grace=3600,
         ping_url="https://hc-ping.com/abc",
     )
     result.update(overrides)
@@ -325,13 +319,25 @@ def checks(**overrides):
 
 def request_params(obj):
     result = dict(obj.module.params)
-    for key in ("uuid", "state", "validate_certs", "request_timeout"):
+    for key in (
+        "uuid",
+        "state",
+        "api_key",
+        "management_api_key",
+        "management_api_token",
+        "management_api_base_url",
+        "ping_api_token",
+        "ping_api_base_url",
+        "validate_certs",
+        "request_timeout",
+    ):
         result.pop(key, None)
-    if result.get("schedule") and result.get("tz"):
-        result.pop("timeout")
+    result = dict((key, value) for key, value in result.items() if value is not None)
+    if result.get("schedule"):
+        result.pop("timeout", None)
     if result.get("timeout"):
-        result.pop("schedule")
-        result.pop("tz")
+        result.pop("schedule", None)
+        result.pop("tz", None)
     result["tags"] = " ".join(obj.module.params.get("tags", []))
     return result
 
@@ -359,14 +365,17 @@ def test_find_existing_channel_order():
     assert obj._find_existing_check(request_params(obj)) == found
 
 
-def test_find_existing_resolves_all_channels():
+def test_find_existing_resolves_all_channels_once():
     obj = checks(channels="*")
     found = existing()
     obj.rest.get.side_effect = [
         response(data={"checks": [found]}),
         response(data={"channels": [{"id": "email"}, {"id": "slack"}]}),
     ]
-    assert obj._find_existing_check(request_params(obj)) == found
+    params = request_params(obj)
+    assert obj._find_existing_check(params) == found
+    assert obj._matches(found, params) is True
+    assert obj.rest.get.call_count == 2
 
 
 def test_find_existing_ambiguous_unique_fails():
@@ -377,10 +386,11 @@ def test_find_existing_ambiguous_unique_fails():
     assert "2 found" in result_kwargs(obj.module)["msg"]
 
 
-def test_find_existing_empty_unique_allows_multiple():
+def test_find_existing_without_unique_always_creates():
     obj = checks(unique=[])
-    obj.rest.get.return_value = response(data={"checks": [existing(), existing()]})
+    obj.rest.get.return_value = response(data={"checks": [existing()]})
     assert obj._find_existing_check(request_params(obj)) is None
+    obj.rest.get.assert_not_called()
 
 
 @pytest.mark.parametrize("found,changed", [(existing(), False), (None, True)])
@@ -416,7 +426,7 @@ def test_create_idempotent_with_all_channels():
 
 
 def test_create_simple_payload():
-    obj = checks()
+    obj = checks(api_key="alias-token", management_api_key="alias-token")
     obj._find_existing_check = MagicMock(return_value=None)
     obj.rest.post.return_value = response(201, existing())
     with pytest.raises(ExitJson) as exc:
@@ -424,9 +434,29 @@ def test_create_simple_payload():
     payload = obj.rest.post.call_args[1]["data"]
     assert payload["tags"] == "prod web"
     assert payload["timeout"] == 60
-    for key in ("schedule", "tz", "uuid", "state", "validate_certs", "request_timeout"):
+    for key in (
+        "schedule",
+        "tz",
+        "uuid",
+        "state",
+        "api_key",
+        "management_api_key",
+        "management_api_token",
+        "validate_certs",
+        "request_timeout",
+    ):
         assert key not in payload
     assert result_kwargs(obj.module)["msg"] == "New check abc created"
+
+
+@pytest.mark.parametrize("alias", ["api_key", "management_api_key"])
+def test_create_strips_management_api_key_aliases(alias):
+    obj = checks(**{alias: "token-alias"})
+    obj._find_existing_check = MagicMock(return_value=existing())
+    with pytest.raises(ExitJson):
+        obj.create()
+    assert result_kwargs(obj.module)["changed"] is False
+    obj.rest.post.assert_not_called()
 
 
 def test_create_cron_payload():
@@ -442,7 +472,7 @@ def test_create_cron_payload():
 
 def test_create_updates_changed_check():
     obj = checks(slug="new")
-    obj._find_existing_check = MagicMock(return_value=existing())
+    obj._find_existing_check = MagicMock(return_value=None)
     obj.rest.post.return_value = response(200, existing(slug="new"))
     with pytest.raises(ExitJson) as exc:
         obj.create()
@@ -496,3 +526,143 @@ def test_destructive_results(
     getattr(obj.rest, http_method).assert_called_once_with("checks/abc" + suffix)
     assert result_kwargs(obj.module)["changed"] is changed
     assert text in result_kwargs(obj.module)["msg"]
+
+
+def test_resume_check_mode():
+    obj = checks(uuid="abc")
+    obj.module.check_mode = True
+    with pytest.raises(ExitJson):
+        obj.resume()
+    assert result_kwargs(obj.module)["changed"] is True
+    assert result_kwargs(obj.module)["uuid"] == "abc"
+    obj.rest.post.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "status,changed,text,exception",
+    [
+        (200, True, "successfully resumed", ExitJson),
+        (404, False, "not found", ExitJson),
+        (409, False, "not paused", ExitJson),
+        (500, False, "HTTP 500", FailJson),
+    ],
+)
+def test_resume_results(status, changed, text, exception):
+    obj = checks(uuid="abc")
+    obj.rest.post.return_value = response(status)
+    with pytest.raises(exception):
+        obj.resume()
+    obj.rest.post.assert_called_once_with("checks/abc/resume")
+    assert result_kwargs(obj.module)["changed"] is changed
+    assert text in result_kwargs(obj.module)["msg"]
+
+
+def test_response_exposes_plain_text_body():
+    resp = MagicMock()
+    resp.read.return_value = b"diagnostic output"
+    assert Response(resp, {"status": 200}).text == "diagnostic output"
+    assert Response(None, {"status": 404, "body": b"missing"}).text == "missing"
+    assert Response(None, {"status": 204}).text is None
+
+
+@patch(PATH + ".fetch_url")
+def test_ping_helper_does_not_probe_management_endpoint(fetch):
+    mod = module(ping_api_token="ping-key")
+    mod.params.pop("request_timeout")
+    helper = HealthchecksioPingHelper(mod)
+    assert helper.api_token == "ping-key"
+    assert helper.request_timeout == 30
+    fetch.assert_not_called()
+
+
+@patch(PATH + ".fetch_url")
+def test_ping_helper_sends_raw_body(fetch):
+    fetch.return_value = fetch_success()
+    helper = HealthchecksioPingHelper(module())
+    helper.ping("POST", "abc/log", "diagnostic")
+    assert fetch.call_args[1]["method"] == "POST"
+    assert fetch.call_args[1]["data"] == b"diagnostic"
+    assert fetch.call_args[1]["headers"] == {
+        "Content-Type": "text/plain; charset=utf-8"
+    }
+
+
+@pytest.mark.parametrize(
+    "cls,authenticate",
+    [(ChecksPingBodyInfo, True), (StatusInfo, False)],
+)
+@patch(PATH + ".HealthchecksioHelper")
+def test_info_service_constructors(helper, cls, authenticate):
+    mod = module()
+    obj = cls(mod)
+    assert obj.module is mod
+    if authenticate:
+        helper.assert_called_once_with(mod)
+    else:
+        helper.assert_called_once_with(mod, authenticate=False)
+    assert obj.rest is helper.return_value
+
+
+def test_ping_body_success_and_failure():
+    obj = service(ChecksPingBodyInfo, module(uuid="abc", sequence=7))
+    obj.rest.get.return_value = response(data={})
+    obj.rest.get.return_value.text = "stored output"
+    with pytest.raises(ExitJson):
+        obj.get()
+    obj.rest.get.assert_called_once_with("checks/abc/pings/7/body")
+    assert result_kwargs(obj.module)["data"] == "stored output"
+
+    obj = service(ChecksPingBodyInfo, module(uuid="abc", sequence=8))
+    obj.rest.get.return_value = response(404)
+    with pytest.raises(FailJson):
+        obj.get()
+    assert "HTTP 404" in result_kwargs(obj.module)["msg"]
+
+
+@pytest.mark.parametrize("status,exception", [(200, ExitJson), (500, FailJson)])
+def test_status_info(status, exception):
+    obj = service(StatusInfo)
+    obj.rest.get.return_value = response(status)
+    with pytest.raises(exception):
+        obj.get()
+    obj.rest.get.assert_called_once_with("status/")
+    if status == 200:
+        assert result_kwargs(obj.module)["status"] == "ok"
+
+
+@pytest.mark.parametrize(
+    "params,endpoint",
+    [
+        ({"uuid": "abc", "seconds": 60}, "checks/abc/flips?seconds=60"),
+        (
+            {"unique_key": "readonly", "start": 100, "end": 200},
+            "checks/readonly/flips?start=100&end=200",
+        ),
+    ],
+)
+def test_flips_filters(params, endpoint):
+    obj = service(ChecksFlipsInfo, module(**params))
+    obj.rest.get.return_value = response(data=[])
+    with pytest.raises(ExitJson):
+        obj.get()
+    obj.rest.get.assert_called_once_with(endpoint)
+
+
+def test_get_uuid_prefers_v3_uuid_field():
+    assert (
+        service(Checks).get_uuid({"uuid": "direct", "ping_url": "x/other"}) == "direct"
+    )
+
+
+def test_explicit_update_uses_uuid_endpoint_and_omits_upsert_fields():
+    obj = checks(uuid="abc", slug="updated")
+    obj.rest.get.return_value = response(200, existing(uuid="abc", slug="old"))
+    obj.rest.post.return_value = response(200, existing(uuid="abc", slug="updated"))
+    with pytest.raises(ExitJson):
+        obj.create()
+    endpoint = obj.rest.post.call_args[0][0]
+    payload = obj.rest.post.call_args[1]["data"]
+    assert endpoint == "checks/abc"
+    assert "unique" not in payload
+    assert payload["slug"] == "updated"
+    assert "management_api_token" not in payload

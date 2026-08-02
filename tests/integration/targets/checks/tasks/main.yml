@@ -130,24 +130,31 @@
           - result.msg is defined
           - result.msg == "Check " ~ uuid ~ " successfully deleted"
 
-    - name: Create an invalid check (mutally exclusive)
+    - name: Verify schedule takes precedence over timeout without an explicit timezone
       community.healthchecksio.checks:
         state: present
         api_key: "{{ api_key }}"
         management_api_base_url: "{{ management_api_base_url }}"
         ping_api_base_url: "{{ ping_api_base_url }}"
-        name: simple test
+        name: schedule precedence test
         unique: ["name"]
         timeout: 77
         schedule: 7 7 * * *
       register: result
-      ignore_errors: true
 
-    - name: Verify integrations
+    - name: Verify schedule precedence
       ansible.builtin.assert:
         that:
-          - result.failed
-          - result.msg is search("parameters are mutually exclusive")
+          - result.changed
+          - result.data.schedule == "7 7 * * *"
+          - result.data.tz == "UTC"
+
+    - name: Delete the schedule precedence check
+      community.healthchecksio.checks:
+        state: absent
+        api_key: "{{ api_key }}"
+        management_api_base_url: "{{ management_api_base_url }}"
+        uuid: "{{ result.uuid }}"
 
     - name: Create a Cron check named "cron test grace"
       community.healthchecksio.checks:
