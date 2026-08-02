@@ -145,3 +145,37 @@ releases:
     fragments:
     - 62-legacy-json-error.yml
     release_date: '2026-08-01'
+  2.0.0:
+    changes:
+      breaking_changes:
+      - The default management API base URL now targets Healthchecks.io API v3 instead
+        of v1.
+      - checks - when both schedule and timeout are supplied, schedule now takes precedence;
+        tz now requires schedule.
+      - checks_flips_info - uuid or unique_key is now required to identify the check.
+      - checks_pings_info - uuid is now required to identify the check.
+      bugfixes:
+      - API request payloads no longer include collection connection settings, and
+        omitted check fields are no longer overwritten during explicit updates.
+      major_changes:
+      - The collection now defaults to Healthchecks.io Management API v3 and provides
+        documented endpoint parity.
+      minor_changes:
+      - checks - add explicit UUID updates, resume state, and all documented v3 keyword
+        filtering fields.
+      - checks_flips_info - add read-only unique-key lookup and time filters.
+      - checks_info - add slug filtering and read-only unique-key lookup.
+      - checks_ping_body_info - add retrieval of stored ping request bodies.
+      - ping - add slug addressing, log events, diagnostic bodies, exit statuses,
+        HTTP method selection, and automatic slug check creation.
+      - status_info - add the database connectivity status endpoint.
+    fragments:
+    - api-v3-parity.yml
+    modules:
+    - description: Get a logged ping body
+      name: checks_ping_body_info
+      namespace: ''
+    - description: Check Healthchecks.io service status
+      name: status_info
+      namespace: ''
+    release_date: '2026-08-02'

@@ -27,7 +27,7 @@ Follow `RELEASE.md` as the authoritative runbook. Complete the whole lifecycle; 
 
 ## 2. Merge The Feature PR
 
-1. Merge using the repository's normal merge-commit strategy and delete the remote feature branch.
+1. Merge using a repository-permitted method and delete the remote feature branch. Prefer a merge commit when allowed; otherwise use squash merge and preserve one atomic commit.
 2. Fetch `origin`, switch to `main`, and fast-forward to the exact remote merge commit.
 3. Verify the PR is merged and the expected files, fragment, development version, and skill are present on `main`.
 4. Close linked issues only when the merged work fully satisfies them and GitHub did not close them automatically.
