@@ -66,6 +66,11 @@ def main():
         help="Path to write the raw API key to",
     )
     parser.add_argument(
+        "--ping-key-output",
+        default="/tmp/hc_ci_ping_key.txt",
+        help="Path to write the project ping key",
+    )
+    parser.add_argument(
         "--service-name",
         default="web",
         help="Name of the web service in docker-compose (default: web)",
@@ -156,9 +161,12 @@ def main():
         + "project = Project.objects.create(owner=user, name='CI Test Project')\n"
         + "if hasattr(project, 'badge_key') and not project.badge_key:\n"
         + "    project.badge_key = uuid.uuid4().hex[:12]\n"
+        + "if not project.ping_key:\n"
+        + "    project.ping_key = uuid.uuid4().hex\n"
         + "raw_key = project.set_api_key()\n"
         + "project.save()\n"
         + "print(raw_key)\n"
+        + "print(project.ping_key)\n"
     )
 
     result = run_command(
@@ -179,8 +187,19 @@ def main():
         )
         sys.exit(1)
 
-    api_key = result.stdout.strip().split(b"\n")[-1].decode().strip()
-    if not api_key:
+    output_lines = [
+        line.decode().strip() for line in result.stdout.splitlines() if line.strip()
+    ]
+    if len(output_lines) < 2:
+        print(
+            "Error: API and ping keys were not returned. stdout: {0}".format(
+                result.stdout
+            ),
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    api_key, ping_key = output_lines[-2:]
+    if not api_key or not ping_key:
         print(
             "Error: empty API key. stdout: {0}".format(result.stdout),
             file=sys.stderr,
@@ -189,9 +208,13 @@ def main():
 
     with open(args.api_key_output, "w", encoding="utf-8") as file_obj:
         file_obj.write(api_key + "\n")
+    with open(args.ping_key_output, "w", encoding="utf-8") as file_obj:
+        file_obj.write(ping_key + "\n")
 
     print(
-        "Bootstrap complete. API key written to {0}".format(args.api_key_output),
+        "Bootstrap complete. Keys written to {0} and {1}".format(
+            args.api_key_output, args.ping_key_output
+        ),
         file=sys.stderr,
     )
 

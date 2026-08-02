@@ -58,7 +58,7 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Sent start signal to ' + uuid + '/start'"
+          - "result.msg == 'Sent start signal to ' + uuid"
 
     - name: Send fail signal
       community.healthchecksio.ping:
@@ -75,7 +75,7 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Sent fail signal to ' + uuid + '/fail'"
+          - "result.msg == 'Sent fail signal to ' + uuid"
 
     - name: Send success signal
       community.healthchecksio.ping:
@@ -110,7 +110,7 @@
         that:
           - result.changed
           - result.msg is defined
-          - "result.msg == 'Sent start signal to ' + uuid + '/start'"
+          - "result.msg == 'Sent start signal to ' + uuid"
 
     - name: Send success signal with the same run ID
       community.healthchecksio.ping:

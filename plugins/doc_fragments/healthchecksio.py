@@ -26,10 +26,10 @@ options:
       - Base URL of the Healthchecks.io management API.
       - "There are several environment variables which can be used to provide this value:"
       - C(HEALTHCHECKSIO_API_MANAGEMENT_BASE_URL), C(HC_API_MANAGEMENT_BASE_URL)
-      - Defaults to C(https://healthchecks.io/api/v1).
+      - Defaults to C(https://healthchecks.io/api/v3).
     type: str
     required: false
-    default: https://healthchecks.io/api/v1
+    default: https://healthchecks.io/api/v3
   ping_api_base_url:
     description:
       - Base URL of the Healthchecks.io ping API.
@@ -41,7 +41,7 @@ options:
     default: https://hc-ping.com
   ping_api_token:
     description:
-      - Healthchecks.io ping API token (optional, can be used instead of management_api_token).
+      - Healthchecks.io project ping key. Required when pinging a check by slug.
       - "There are several environment variables which can be used to provide this value:"
       - C(HEALTHCHECKSIO_API_PING_KEY), C(HC_API_PING_KEY)
     type: str

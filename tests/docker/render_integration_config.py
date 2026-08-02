@@ -12,6 +12,8 @@ def main():
     with open("/tmp/hc_ci_key.txt", encoding="utf-8") as file_obj:
         api_key = file_obj.read().strip()
     host = os.environ.get("HC_TEST_HOST", "127.0.0.1").strip()
+    with open("/tmp/hc_ci_ping_key.txt", encoding="utf-8") as file_obj:
+        ping_key = file_obj.read().strip()
     with open(
         "tests/integration/integration_config.yml.template", encoding="utf-8"
     ) as file_obj:
@@ -20,14 +22,14 @@ def main():
         "${MANAGEMENT_API_TOKEN:-$HEALTHCHECKSIO_API_TOKEN}", api_key
     )
     content = content.replace(
-        '${MANAGEMENT_API_BASE_URL:-"https://healthchecks.io/api/v1"}',
-        "http://{0}:8000/api/v1".format(host),
+        '${MANAGEMENT_API_BASE_URL:-"https://healthchecks.io/api/v3"}',
+        "http://{0}:8000/api/v3".format(host),
     )
     content = content.replace(
         '${PING_API_BASE_URL:-"https://hc-ping.com"}',
         "http://{0}:8000/ping".format(host),
     )
-    content = content.replace('${PING_API_TOKEN:-""}', "")
+    content = content.replace('${PING_API_TOKEN:-""}', ping_key)
     with open(
         "tests/integration/integration_config.yml", "w", encoding="utf-8"
     ) as file_obj:

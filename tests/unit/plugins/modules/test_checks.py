@@ -18,7 +18,12 @@ from ansible_collections.community.healthchecksio.tests.unit.plugins.modules.uti
 
 @pytest.mark.parametrize(
     ("state", "method"),
-    [("present", "create"), ("absent", "delete"), ("pause", "pause")],
+    [
+        ("present", "create"),
+        ("absent", "delete"),
+        ("pause", "pause"),
+        ("resume", "resume"),
+    ],
 )
 def test_run_dispatches_state(state, method):
     module = make_module(state=state)
@@ -35,6 +40,7 @@ def test_run_ignores_unknown_state():
     checks_class.return_value.create.assert_not_called()
     checks_class.return_value.delete.assert_not_called()
     checks_class.return_value.pause.assert_not_called()
+    checks_class.return_value.resume.assert_not_called()
 
 
 def test_main_builds_state_constraints_and_runs_module():
@@ -45,14 +51,14 @@ def test_main_builds_state_constraints_and_runs_module():
     assert kwargs["required_if"] == [
         ("state", "absent", ["uuid"]),
         ("state", "pause", ["uuid"]),
+        ("state", "resume", ["uuid"]),
     ]
-    assert kwargs["required_together"] == [("schedule", "tz")]
-    assert kwargs["mutually_exclusive"] == [
-        ("timeout", "schedule"),
-        ("timeout", "tz"),
-    ]
+    assert kwargs["required_by"] == {"tz": "schedule"}
+    assert "required_together" not in kwargs
+    assert "mutually_exclusive" not in kwargs
     assert kwargs["argument_spec"]["state"]["choices"] == [
         "present",
         "absent",
         "pause",
+        "resume",
     ]

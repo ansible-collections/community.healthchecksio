@@ -11,7 +11,7 @@ This Ansible collection contains modules for assisting in the automation of the 
 From their site:
 > Healthchecks.io is an online service for monitoring regularly running tasks such as cron jobs. It uses the Dead man's switch technique: the monitored system must "check in" with Healthchecks.io at regular, configurable time intervals. When Healthchecks.io detects a missed check-in, it sends out alerts.
 
-The service documentation is located at [https://healthchecks.io/docs/](https://healthchecks.io/docs/) and the API documentation is located at [https://healthchecks.io/docs/api/](https://healthchecks.io/docs/api/). This Ansible module strives for API parity.
+The service documentation is located at [https://healthchecks.io/docs/](https://healthchecks.io/docs/) and the API documentation is located at [https://healthchecks.io/docs/api/](https://healthchecks.io/docs/api/). This collection strives for API parity. See the [API coverage matrix](docs/API_COVERAGE.md).
 
 ## Code of Conduct
 
@@ -96,13 +96,15 @@ N/A
 * `community.healthchecksio.badges_info` - Returns a map of all tags in the project, with badge URLs for each tag.
 * `community.healthchecksio.channels_info` - Returns a list of integrations belonging to the project.
 * `community.healthchecksio.checks_flips_info` - Get a list of check's status changes.
-* `community.healthchecksio.checks_info` - Returns a list of checks belonging to the user, optionally filtered by one or more tags.
+* `community.healthchecksio.checks_info` - Returns checks, optionally filtered by tags, slug, or read-only unique key.
 * `community.healthchecksio.checks_pings_info` - Returns a list of pings this check has received.
-* `community.healthchecksio.checks` - Create, delete, update, and pause checks.
+* `community.healthchecksio.checks_ping_body_info` - Returns the stored body for a logged ping.
+* `community.healthchecksio.checks` - Create, update, pause, resume, and delete checks.
+* `community.healthchecksio.status_info` - Checks service database connectivity.
 
 #### Ping API
 
-* `community.healthchecksio.ping` - Signal success, fail, and start events.
+* `community.healthchecksio.ping` - Signal success, failure, start, log, and process exit status events.
 
 ## Using this collection
 

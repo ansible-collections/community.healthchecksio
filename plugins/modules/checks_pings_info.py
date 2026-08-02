@@ -29,7 +29,7 @@ options:
     description:
       - If specified, returns this specific check.
     type: str
-    required: false
+    required: true
 extends_documentation_fragment:
   - community.healthchecksio.healthchecksio.documentation
 """
@@ -76,7 +76,7 @@ def main():
     argument_spec = HealthchecksioHelper.healthchecksio_argument_spec()
     argument_spec.update(
         state=dict(type="str", choices=["present"], default="present"),
-        uuid=dict(type="str", required=False),
+        uuid=dict(type="str", required=True),
     )
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
