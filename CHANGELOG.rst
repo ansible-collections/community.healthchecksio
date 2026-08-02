@@ -4,6 +4,43 @@ Community Healthchecks.io Release Notes
 
 .. contents:: Topics
 
+v2.0.0
+======
+
+Major Changes
+-------------
+
+- The collection now defaults to Healthchecks.io Management API v3 and provides documented endpoint parity.
+
+Minor Changes
+-------------
+
+- checks - add explicit UUID updates, resume state, and all documented v3 keyword filtering fields.
+- checks_flips_info - add read-only unique-key lookup and time filters.
+- checks_info - add slug filtering and read-only unique-key lookup.
+- checks_ping_body_info - add retrieval of stored ping request bodies.
+- ping - add slug addressing, log events, diagnostic bodies, exit statuses, HTTP method selection, and automatic slug check creation.
+- status_info - add the database connectivity status endpoint.
+
+Breaking Changes / Porting Guide
+--------------------------------
+
+- The default management API base URL now targets Healthchecks.io API v3 instead of v1.
+- checks - when both schedule and timeout are supplied, schedule now takes precedence; tz now requires schedule.
+- checks_flips_info - uuid or unique_key is now required to identify the check.
+- checks_pings_info - uuid is now required to identify the check.
+
+Bugfixes
+--------
+
+- API request payloads no longer include collection connection settings, and omitted check fields are no longer overwritten during explicit updates.
+
+New Modules
+-----------
+
+- checks_ping_body_info - Get a logged ping body
+- status_info - Check Healthchecks.io service status
+
 v1.5.4
 ======
 
