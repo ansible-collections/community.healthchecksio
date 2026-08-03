@@ -163,6 +163,14 @@ N/A
 ```
 
 ```yaml
+- name: Resume a paused check by uuid
+  community.healthchecksio.checks:
+    state: resume
+    api_key: "{{ api_key }}"
+    uuid: "{{ check_uuid }}"
+```
+
+```yaml
 - name: Delete a check by uuid
   community.healthchecksio.checks:
     state: absent
@@ -173,17 +181,30 @@ N/A
 ```yaml
 - name: Get a list of checks pings
   community.healthchecksio.checks_pings_info:
-    state: pings
+    state: present
     api_key: "{{ api_key }}"
     uuid: "{{ check_uuid }}"
 ```
 
 ```yaml
-- name: Get a list of checks flips
-  community.healthchecksio.checks_flips_info:
-    state: flips
+- name: Read a logged ping body
+  community.healthchecksio.checks_ping_body_info:
     api_key: "{{ api_key }}"
     uuid: "{{ check_uuid }}"
+    sequence: 42
+```
+
+```yaml
+- name: Get a list of checks flips
+  community.healthchecksio.checks_flips_info:
+    state: present
+    api_key: "{{ api_key }}"
+    uuid: "{{ check_uuid }}"
+```
+
+```yaml
+- name: Verify Healthchecks.io database connectivity
+  community.healthchecksio.status_info:
 ```
 
 ### Ping API
@@ -210,6 +231,23 @@ N/A
     state: present
     uuid: "{{ check_uuid }}"
     signal: start
+```
+
+```yaml
+- name: Store a log message without changing check status
+  community.healthchecksio.ping:
+    state: present
+    uuid: "{{ check_uuid }}"
+    signal: log
+    body: "Still running; processed 1200 rows"
+```
+
+```yaml
+- name: Report a process exit status
+  community.healthchecksio.ping:
+    state: present
+    uuid: "{{ check_uuid }}"
+    exit_status: "{{ command_result.rc }}"
 ```
 
 ### Using a self-hosted instance of Healthchecks.io
