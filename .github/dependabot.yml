@@ -1,0 +1,32 @@
+---
+version: 2
+updates:
+  # GitHub Actions used in workflows (.github/workflows/*.yml)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "mamercad"
+    commit-message:
+      prefix: "ci"
+
+  # Python dev dependencies managed by uv (pyproject.toml / uv.lock)
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "mamercad"
+    commit-message:
+      prefix: "chore"
+
+  # Container images pinned in the integration-test compose file
+  - package-ecosystem: "docker-compose"
+    directory: "/tests/docker"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "mamercad"
+    commit-message:
+      prefix: "ci"
