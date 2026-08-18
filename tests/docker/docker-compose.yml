@@ -24,7 +24,7 @@ services:
       retries: 30
 
   web:
-    image: healthchecks/healthchecks:v4.1
+    image: healthchecks/healthchecks:v4.3
     restart: unless-stopped
     working_dir: /opt/healthchecks
     depends_on:
